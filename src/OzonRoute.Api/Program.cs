@@ -1,3 +1,6 @@
+using OzonRoute.Api.Bll.Services;
+using OzonRoute.Api.Bll.Services.Interfaces;
+
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     EnvironmentName = Environments.Development,
@@ -9,6 +12,7 @@ if (builder.Environment.IsProduction())
     builder.Configuration.AddJsonFile("appsettings.Production.json", reloadOnChange: true, optional: true);
 }
 
+builder.Services.AddScoped<IPriceCalculator, PriceCalculatorService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
@@ -21,7 +25,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 app.MapControllers();
 
 await app.RunAsync();
