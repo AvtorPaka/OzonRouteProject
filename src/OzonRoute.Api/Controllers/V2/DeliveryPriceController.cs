@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 using OzonRoute.Api.Bll.Services.Interfaces;
 using OzonRoute.Api.Bll.Models;
-using OzonRoute.Api.Requests.V1;
-using OzonRoute.Api.Requests.V1.Extensions;
-using OzonRoute.Api.Responses.V1;
-using OzonRoute.Api.Responses.V1.Extensions;
+using OzonRoute.Api.Requests.V2;
+using OzonRoute.Api.Requests.V2.Extensions;
+using OzonRoute.Api.Responses.V2;
+using OzonRoute.Api.Responses.V2.Extensions;
 
-namespace OzonRoute.Api.Controllers.V1;
+namespace OzonRoute.Api.Controllers.V2;
 
 [ApiController]
-[Route("v1/delivery-price")]
+[Route("v2/delivery-price")]
 public class DeliveryPriceController : ControllerBase
 {
     private readonly IServiceProvider _serviceProvider;

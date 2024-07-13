@@ -8,6 +8,7 @@ public static class CalculateLogModelExtensions
         return new CalculateLogModel(
             At: goodPriceEntity.At,
             Volume: goodPriceEntity.Volume,
+            Weight: goodPriceEntity.Weight,
             Price: goodPriceEntity.Price
         );
     }
