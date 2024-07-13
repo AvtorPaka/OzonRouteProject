@@ -1,12 +1,28 @@
-var builder = WebApplication.CreateBuilder(new WebApplicationOptions {
+using OzonRoute.Api.Bll.Services;
+using OzonRoute.Api.Bll.Services.Interfaces;
+using OzonRoute.Api.Dal.Context;
+using OzonRoute.Api.Dal.Repositories;
+using OzonRoute.Api.Dal.Repositories.Interfaces;
+
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
     EnvironmentName = Environments.Development,
     ContentRootPath = Directory.GetCurrentDirectory()
 });
 
+if (builder.Environment.IsProduction())
+{
+    builder.Configuration.AddJsonFile("appsettings.Production.json", reloadOnChange: true, optional: true);
+}
+
+builder.Services.AddSingleton<DeliveryPriceContext>();
+builder.Services.AddScoped<IGoodPriceRepository, GoodPriceRepository>();
+builder.Services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
 
-var app = builder.Build();
+using WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
@@ -14,31 +30,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.MapControllers();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+await app.RunAsync();
