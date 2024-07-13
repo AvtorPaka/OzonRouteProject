@@ -3,6 +3,7 @@ using OzonRoute.Api.Bll.Services.Interfaces;
 using OzonRoute.Api.Dal.Context;
 using OzonRoute.Api.Dal.Repositories;
 using OzonRoute.Api.Dal.Repositories.Interfaces;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -18,8 +19,12 @@ if (builder.Environment.IsProduction())
 builder.Services.AddSingleton<DeliveryPriceContext>();
 builder.Services.AddScoped<IGoodPriceRepository, GoodPriceRepository>();
 builder.Services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen((SwaggerGenOptions o) => {
+    o.CustomSchemaIds(x => x.FullName);
+});
+
 builder.Services.AddControllers();
 
 using WebApplication app = builder.Build();
