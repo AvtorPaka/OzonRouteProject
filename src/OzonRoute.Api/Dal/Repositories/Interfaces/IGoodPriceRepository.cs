@@ -4,6 +4,6 @@ namespace OzonRoute.Api.Dal.Repositories.Interfaces;
 
 public interface IGoodPriceRepository
 {
-    public Task Save(GoodPriceEntity goodPriceData);
-    public Task<GoodPriceEntity> QueryData();
+    public void Save(GoodPriceEntity goodPriceData);
+    public Task<List<GoodPriceEntity>> QueryData();
 }

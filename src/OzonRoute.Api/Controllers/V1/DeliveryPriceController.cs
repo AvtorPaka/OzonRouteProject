@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using OzonRoute.Api.Bll.Services.Interfaces;
 using OzonRoute.Api.Requests.V1;
 using OzonRoute.Api.Responses.V1;
+using OzonRoute.Api.Requests.V1.Extensions;
 using OzonRoute.Api.Bll.Models;
+using OzonRoute.Api.Responses.V1.Extensions;
 
 namespace OzonRoute.Api.Controllers.V1;
 
@@ -10,20 +12,37 @@ namespace OzonRoute.Api.Controllers.V1;
 [Route("v1/delivery-price")]
 public class DeliveryPriceController : ControllerBase
 {
+    private readonly IServiceProvider _serviceProvider;
+
+    public DeliveryPriceController([FromServices] IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
     [HttpPost]
-    [Route("/calculate")]
+    [Route("calculate")]
     public async Task<CalculateResponse> Calculate(CalculateRequest request)
     {
-        await Task.Delay(TimeSpan.FromSeconds(10));
-        throw new NotImplementedException();
+        using var scope = _serviceProvider.CreateAsyncScope();
+        IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
+
+        var requestModel = await request.MapRequestToModel();
+        double result = priceCalculatorService.CalculatePrice(requestModel);
+
+        return new CalculateResponse(result);
     }
 
 
     [HttpPost]
-    [Route("/get-history")]
-    public async Task<GetHistoryResponse> GetHistory(GetHistoryRequest request)
+    [Route("get-history")]
+    public async Task<List<GetHistoryResponse>> GetHistory(GetHistoryRequest request)
     {
-        await Task.Delay(TimeSpan.FromSeconds(10));
-        throw new NotImplementedException();
+        using var scope = _serviceProvider.CreateAsyncScope();
+        IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
+
+        List<CalculateLogModel> log = await priceCalculatorService.QueryLog(request.Take);
+        List<GetHistoryResponse> response = await log.MapModelsToResponses();
+
+        return response;
     }
 }
