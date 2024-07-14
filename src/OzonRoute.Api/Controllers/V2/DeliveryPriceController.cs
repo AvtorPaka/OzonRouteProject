@@ -27,7 +27,7 @@ public class DeliveryPriceController : ControllerBase
         IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
 
         var requestModel = await request.MapRequestToModel();
-        double result = priceCalculatorService.CalculatePrice(requestModel);
+        double result = priceCalculatorService.CalculatePrice(goods:requestModel, distance: 1000);
 
         return new CalculateResponse(result);
     }
@@ -35,12 +35,12 @@ public class DeliveryPriceController : ControllerBase
 
     [HttpPost]
     [Route("get-history")]
-    public async Task<List<GetHistoryResponse>> GetHistory(GetHistoryRequest request)
+    public async Task<List<GetHistoryResponse>> GetHistory(GetHistoryRequest request, CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateAsyncScope();
         IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
 
-        List<CalculateLogModel> log = await priceCalculatorService.QueryLog(request.Take);
+        List<CalculateLogModel> log = await priceCalculatorService.QueryLog(request.Take, cancellationToken);
         List<GetHistoryResponse> response = await log.MapModelsToResponses();
 
         return response;
