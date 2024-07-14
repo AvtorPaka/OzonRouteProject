@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 using OzonRoute.Api.Bll.Services.Interfaces;
 using OzonRoute.Api.Bll.Models;
-using OzonRoute.Api.Requests.V1;
-using OzonRoute.Api.Requests.V1.Extensions;
-using OzonRoute.Api.Responses.V1;
-using OzonRoute.Api.Responses.V1.Extensions;
+using OzonRoute.Api.Requests.V3;
+using OzonRoute.Api.Requests.V3.Extensions;
+using OzonRoute.Api.Responses.V3;
+using OzonRoute.Api.Responses.V3.Extensions;
 
-namespace OzonRoute.Api.Controllers.V1;
+namespace OzonRoute.Api.Controllers.V3;
 
 [ApiController]
-[Route("v1/delivery-price")]
+[Route("v3/delivery-price")]
 public class DeliveryPriceController : ControllerBase
 {
     private readonly IServiceProvider _serviceProvider;
@@ -27,7 +27,7 @@ public class DeliveryPriceController : ControllerBase
         IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
 
         var requestModel = await request.MapRequestToModel();
-        double result = priceCalculatorService.CalculatePrice(goods:requestModel, distance: 1000);
+        double result = priceCalculatorService.CalculatePrice(goods:requestModel, distance: request.Distance);
 
         return new CalculateResponse(result);
     }
