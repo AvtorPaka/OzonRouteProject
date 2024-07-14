@@ -35,14 +35,26 @@ public class DeliveryPriceController : ControllerBase
 
     [HttpPost]
     [Route("get-history")]
-    public async Task<List<GetHistoryResponse>> GetHistory(GetHistoryRequest request)
+    public async Task<List<GetHistoryResponse>> GetHistory(GetHistoryRequest request, CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateAsyncScope();
         IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
 
-        List<CalculateLogModel> log = await priceCalculatorService.QueryLog(request.Take);
+        List<CalculateLogModel> log = await priceCalculatorService.QueryLog(request.Take, cancellationToken);
         List<GetHistoryResponse> response = await log.MapModelsToResponses();
 
         return response;
+    }
+
+    [HttpPost]
+    [Route("delete-history")]
+    public async Task<IActionResult> DeleteHistory(CancellationToken cancellationToken)
+    {   
+        await Task.Delay(TimeSpan.FromMilliseconds(1), cancellationToken); //Fiction
+        using var scope = _serviceProvider.CreateAsyncScope();
+        IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
+        
+        priceCalculatorService.ClearLog();
+        return Ok();
     }
 }

@@ -64,16 +64,21 @@ public class PriceCalculatorService : IPriceCalculatorService
         return weightPrice;
     }
 
-    public async Task<List<CalculateLogModel>> QueryLog(int take)
+    public async Task<List<CalculateLogModel>> QueryLog(int take, CancellationToken cancellationToken)
     {   
         if (take <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(take), take, "take parametr supposed to be greater than 0");
         }
 
-        List<GoodPriceEntity> log = await _goodPriceRepository.QueryData();
+        List<GoodPriceEntity> log = await _goodPriceRepository.QueryData(cancellationToken);
         List<CalculateLogModel> processedLog = await log.OrderByDescending(g => g.At).Take(take).MapEntitiesToModels();
 
         return processedLog;
+    }
+
+    public void ClearLog()
+    {
+        _goodPriceRepository.ClearData();
     }
 }
