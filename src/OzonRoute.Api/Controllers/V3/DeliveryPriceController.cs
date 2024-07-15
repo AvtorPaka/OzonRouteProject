@@ -27,7 +27,7 @@ public class DeliveryPriceController : ControllerBase
         IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
 
         var requestModel = await request.MapRequestToModel();
-        double result = priceCalculatorService.CalculatePrice(goods:requestModel, distance: request.Distance);
+        double result = await priceCalculatorService.CalculatePrice(goods:requestModel, distance: request.Distance);
 
         return new CalculateResponse(result);
     }

@@ -12,13 +12,15 @@ public class PriceCalculatorService : IPriceCalculatorService
     private const double volumeRatio = 3.27d;
     private const double weightRatio = 1.34d;
     private readonly IGoodPriceRepository _goodPriceRepository;
+    private readonly IReportsRepository _reportsRepository;
 
-    public PriceCalculatorService([FromServices] IGoodPriceRepository goodPriceRepository)
+    public PriceCalculatorService([FromServices] IGoodPriceRepository goodPriceRepository, [FromServices] IReportsRepository reportsRepository)
     {
         _goodPriceRepository = goodPriceRepository;
+        _reportsRepository = reportsRepository;
     }
 
-    public double CalculatePrice(List<GoodModel> goods, double distance = 1000)
+    public async Task<double> CalculatePrice(List<GoodModel> goods, int distance = 1000)
     {
         if (!goods.Any()) {
             throw new ArgumentException("Goods count must be greater than 0");
@@ -35,6 +37,11 @@ public class PriceCalculatorService : IPriceCalculatorService
             Weight: summaryWeight,  // In gramms
             Distance: distance, // In metrs
             At: DateTime.UtcNow));
+        
+        List<GoodEntity> goodsEntities = await goods.MapModelsToEntitys();
+        _reportsRepository.CalculateNewMaxWeightAndDistance(goodsEntities, distance);
+        _reportsRepository.CalculateNewMaxVolumeAndDistance(goodsEntities, distance);
+        _reportsRepository.CalculateWavgPrice(finalPrice, goods.Count);
 
         return finalPrice;
     }
@@ -80,5 +87,13 @@ public class PriceCalculatorService : IPriceCalculatorService
     public void ClearLog()
     {
         _goodPriceRepository.ClearData();
+    }
+
+    public async Task<ReportModel> GetReport(CancellationToken cancellationToken)
+    {
+        ReportEntity reportEntity =  await _reportsRepository.GetReportData(cancellationToken);
+        ReportModel reportModel = await reportEntity.MapEntityToModel();
+
+        return reportModel;
     }
 }
