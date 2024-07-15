@@ -18,6 +18,7 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddSingleton<DeliveryPriceContext>();
 builder.Services.AddScoped<IGoodPriceRepository, GoodPriceRepository>();
+builder.Services.AddScoped<IReportsRepository, ReportsRepository>();
 builder.Services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
 
 builder.Services.AddEndpointsApiExplorer();

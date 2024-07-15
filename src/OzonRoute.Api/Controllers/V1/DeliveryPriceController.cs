@@ -27,7 +27,7 @@ public class DeliveryPriceController : ControllerBase
         IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
 
         var requestModel = await request.MapRequestToModel();
-        double result = priceCalculatorService.CalculatePrice(goods:requestModel, distance: 1000);
+        double result = await priceCalculatorService.CalculatePrice(goods:requestModel, distance: 1000);
 
         return new CalculateResponse(result);
     }
@@ -56,5 +56,19 @@ public class DeliveryPriceController : ControllerBase
         
         priceCalculatorService.ClearLog();
         return Ok();
+    }
+
+
+    [HttpPost]
+    [Route("reports/01")]
+    public async Task<ReportsResponse> Reports(CancellationToken cancellationToken)
+    {
+        using var scope = _serviceProvider.CreateAsyncScope();
+        IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
+
+        ReportModel reportModel = await priceCalculatorService.GetReport(cancellationToken);
+        ReportsResponse reportsResponse = await reportModel.MapModelToResponse();
+
+        return reportsResponse;
     }
 }
