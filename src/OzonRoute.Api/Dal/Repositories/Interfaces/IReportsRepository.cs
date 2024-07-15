@@ -1,9 +1,11 @@
+using OzonRoute.Api.Dal.Models;
+
 namespace OzonRoute.Api.Dal.Repositories.Interfaces;
 
 public interface IReportsRepository
 {   
-    public void GetReportData();
-    public void CalculateNewMaxWeight(double goodsSummaryWeight, double goodsShipDistance);
-    public void CalculateNewMaxVolume(double goodsSummaryVolume, double goodsShipDistance);
+    public Task<ReportEntity> GetReportData(CancellationToken cancellationToken);
+    public void CalculateNewMaxWeightAndDistance(List<GoodEntity> goodPriceEntities, int distance);
+    public void CalculateNewMaxVolumeAndDistance(List<GoodEntity> goodPriceEntities, int distance);
     public void CalculateWavgPrice(double goodsFinalPrice, int goodsCount);
 }
