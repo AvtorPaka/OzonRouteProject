@@ -4,23 +4,30 @@ using OzonRoute.Api.Bll.Models;
 using OzonRoute.Api.Bll.Models.Extensions;
 using OzonRoute.Api.Dal.Repositories.Interfaces;
 using OzonRoute.Api.Dal.Models;
+using Microsoft.Extensions.Options;
+using OzonRoute.Api.Configuration.Models;
 
 namespace OzonRoute.Api.Bll.Services;
 
 public class PriceCalculatorService : IPriceCalculatorService
 {
-    private const double volumeRatio = 3.27d;
-    private const double weightRatio = 1.34d;
+    private readonly double _volumeToPriceRatio;
+    private readonly double _weightToPriceRatio;
     private readonly IGoodPriceRepository _goodPriceRepository;
     private readonly IReportsRepository _reportsRepository;
 
-    public PriceCalculatorService([FromServices] IGoodPriceRepository goodPriceRepository, [FromServices] IReportsRepository reportsRepository)
-    {
+    public PriceCalculatorService(
+        [FromServices] IOptionsSnapshot<PriceCalculatorOptions> options,
+        [FromServices] IGoodPriceRepository goodPriceRepository,
+        [FromServices] IReportsRepository reportsRepository)
+    {   
+        _volumeToPriceRatio = options.Value.VolumeToPriceRatio;
+        _weightToPriceRatio = options.Value.WeightToPriceRatio;
         _goodPriceRepository = goodPriceRepository;
         _reportsRepository = reportsRepository;
     }
 
-    public async Task<double> CalculatePrice(List<GoodModel> goods, int distance = 1000)
+    public async Task<double> CalculatePrice(IReadOnlyList<GoodModel> goods, int distance = 1000)
     {
         if (!goods.Any()) {
             throw new ArgumentException("Goods count must be greater than 0");
@@ -28,6 +35,8 @@ public class PriceCalculatorService : IPriceCalculatorService
         if (distance <= 1) {
             throw new ArgumentException("Shipping distance must be greater than 1");
         }
+
+        await Task.Delay(TimeSpan.FromMilliseconds(1)); //Fiction
 
         double finalPrice = CalculatePriceForOneMetr(goods, out double summaryVolume, out double summaryWeight) * distance;
 
@@ -38,15 +47,10 @@ public class PriceCalculatorService : IPriceCalculatorService
             Distance: distance, // In metrs
             At: DateTime.UtcNow));
         
-        List<GoodEntity> goodsEntities = await goods.MapModelsToEntitys();
-        _reportsRepository.CalculateNewMaxWeightAndDistance(goodsEntities, distance);
-        _reportsRepository.CalculateNewMaxVolumeAndDistance(goodsEntities, distance);
-        _reportsRepository.CalculateWavgPrice(finalPrice, goods.Count);
-
         return finalPrice;
     }
 
-    private double CalculatePriceForOneMetr(List<GoodModel> goods, out double summaryVolume, out double summaryWeight)
+    private double CalculatePriceForOneMetr(IReadOnlyList<GoodModel> goods, out double summaryVolume, out double summaryWeight)
     {
         double volumePrice = CalculatePriceByVolume(goods, out summaryVolume);
         double weightPrice = CalculatePriceByWeight(goods, out summaryWeight);
@@ -55,31 +59,39 @@ public class PriceCalculatorService : IPriceCalculatorService
         return priceForOneMetr;
     }
 
-    private static double CalculatePriceByVolume(List<GoodModel> goods, out double summaryVolume)
+    private double CalculatePriceByVolume(IReadOnlyList<GoodModel> goods, out double summaryVolume)
     {
         summaryVolume = goods.Sum(g => g.Lenght * g.Width * g.Height);
-        double volumePrice = summaryVolume * volumeRatio;
+        double volumePrice = summaryVolume * _volumeToPriceRatio;
 
         return volumePrice;
     }
 
-    private static double CalculatePriceByWeight(List<GoodModel> goods, out double summaryWeight)
+    private double CalculatePriceByWeight(IReadOnlyList<GoodModel> goods, out double summaryWeight)
     {
         summaryWeight = goods.Sum(g => g.Weight) * 1000.0d;
-        double weightPrice = (summaryWeight * weightRatio) / 1000.0d;
+        double weightPrice = (summaryWeight * _weightToPriceRatio) / 1000.0d;
 
         return weightPrice;
     }
 
-    public async Task<List<CalculateLogModel>> QueryLog(int take, CancellationToken cancellationToken)
+    public async Task CalculateNewReportData(IReadOnlyList<GoodModel> goods, int distance, double finalPrice)
+    {
+        IReadOnlyList<GoodEntityReport> goodsEntities = await goods.MapModelsToEntitys();
+        _reportsRepository.CalculateNewMaxWeightAndDistance(goodsEntities, distance);
+        _reportsRepository.CalculateNewMaxVolumeAndDistance(goodsEntities, distance);
+        _reportsRepository.CalculateWavgPrice(finalPrice, goods.Count);
+    }
+
+    public async Task<IReadOnlyList<CalculateLogModel>> QueryLog(int take, CancellationToken cancellationToken)
     {   
         if (take <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(take), take, "take parametr supposed to be greater than 0");
         }
 
-        List<GoodPriceEntity> log = await _goodPriceRepository.QueryData(cancellationToken);
-        List<CalculateLogModel> processedLog = await log.OrderByDescending(g => g.At).Take(take).MapEntitiesToModels();
+        IReadOnlyList<GoodPriceEntity> log = await _goodPriceRepository.QueryData(cancellationToken);
+        IReadOnlyList<CalculateLogModel> processedLog = await log.OrderByDescending(g => g.At).Take(take).MapEntitiesToModels();
 
         return processedLog;
     }

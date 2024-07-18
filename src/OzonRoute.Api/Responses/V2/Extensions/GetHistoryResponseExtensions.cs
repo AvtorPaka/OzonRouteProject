@@ -18,7 +18,7 @@ public static class GetHistoryResponseExtensions
         );
     }
 
-    public static async Task<List<GetHistoryResponse>> MapModelsToResponses(this List<CalculateLogModel> calculateLogModels)
+    public static async Task<IReadOnlyList<GetHistoryResponse>> MapModelsToResponses(this IReadOnlyList<CalculateLogModel> calculateLogModels)
     {
         return await Task.FromResult(calculateLogModels.Select(m => m.MapModelToResponse()).ToList());
     }

@@ -14,7 +14,7 @@ public class ReportsRepository : IReportsRepository
         _deliveryPriceContext = deliveryPriceContext;
     }
 
-    public void CalculateNewMaxVolumeAndDistance(List<GoodEntity> goodPriceEntities, int distance)
+    public void CalculateNewMaxVolumeAndDistance(IReadOnlyList<GoodEntityReport> goodPriceEntities, int distance)
     {
         double maxCurrentVolume = goodPriceEntities.Max(e => e.Volume);
         if (maxCurrentVolume > _deliveryPriceContext.Report.MaxVolume)
@@ -24,7 +24,7 @@ public class ReportsRepository : IReportsRepository
         }
     }
 
-    public void CalculateNewMaxWeightAndDistance(List<GoodEntity> goodPriceEntities, int distance)
+    public void CalculateNewMaxWeightAndDistance(IReadOnlyList<GoodEntityReport> goodPriceEntities, int distance)
     {
         double maxCurrentWeight = goodPriceEntities.Max(e => e.Weight);
         if (maxCurrentWeight > _deliveryPriceContext.Report.MaxWeight)
