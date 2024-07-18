@@ -5,7 +5,7 @@ namespace OzonRoute.Api.Dal.Repositories.Interfaces;
 public interface IReportsRepository
 {   
     public Task<ReportEntity> GetReportData(CancellationToken cancellationToken);
-    public void CalculateNewMaxWeightAndDistance(List<GoodEntity> goodPriceEntities, int distance);
-    public void CalculateNewMaxVolumeAndDistance(List<GoodEntity> goodPriceEntities, int distance);
+    public void CalculateNewMaxWeightAndDistance(IReadOnlyList<GoodEntityReport> goodPriceEntities, int distance);
+    public void CalculateNewMaxVolumeAndDistance(IReadOnlyList<GoodEntityReport> goodPriceEntities, int distance);
     public void CalculateWavgPrice(double goodsFinalPrice, int goodsCount);
 }

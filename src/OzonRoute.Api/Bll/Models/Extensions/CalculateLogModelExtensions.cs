@@ -15,7 +15,7 @@ public static class CalculateLogModelExtensions
         );
     }
 
-    public static async Task<List<CalculateLogModel>> MapEntitiesToModels(this IEnumerable<GoodPriceEntity> goodPriceEntities)
+    public static async Task<IReadOnlyList<CalculateLogModel>> MapEntitiesToModels(this IEnumerable<GoodPriceEntity> goodPriceEntities)
     {
         return await Task.FromResult(goodPriceEntities.Select(g => g.MapEntityToModel()).ToList());
     }

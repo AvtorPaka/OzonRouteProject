@@ -1,41 +1,27 @@
-using OzonRoute.Api.Bll.Services;
-using OzonRoute.Api.Bll.Services.Interfaces;
-using OzonRoute.Api.Dal.Context;
-using OzonRoute.Api.Dal.Repositories;
-using OzonRoute.Api.Dal.Repositories.Interfaces;
-using Swashbuckle.AspNetCore.SwaggerGen;
+namespace OzonRoute.Api;
 
-var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+internal sealed class Program
 {
-    EnvironmentName = Environments.Development,
-    ContentRootPath = Directory.GetCurrentDirectory()
-});
+    public static async Task Main()
+    {
+        var builder = Host.CreateDefaultBuilder()
+        .ConfigureWebHostDefaults(webBuidler =>
+        {
+            webBuidler.UseStartup<Startup>();
+            webBuidler.ConfigureAppConfiguration((context, config) =>
+            {
+                //In fact no need for that cause WebHost do it automatically
+                if (context.HostingEnvironment.IsProduction())
+                {
+                    config.AddJsonFile("appsettings.Production.json", optional: true, reloadOnChange: true);
+                }
+            });
+        })
+        .ConfigureHostOptions(x =>
+        {
+            x.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+        });
 
-if (builder.Environment.IsProduction())
-{
-    builder.Configuration.AddJsonFile("appsettings.Production.json", reloadOnChange: true, optional: true);
+        await builder.Build().RunAsync();
+    }
 }
-
-builder.Services.AddSingleton<DeliveryPriceContext>();
-builder.Services.AddScoped<IGoodPriceRepository, GoodPriceRepository>();
-builder.Services.AddScoped<IReportsRepository, ReportsRepository>();
-builder.Services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen((SwaggerGenOptions o) => {
-    o.CustomSchemaIds(x => x.FullName);
-});
-
-builder.Services.AddControllers();
-
-using WebApplication app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.MapControllers();
-
-await app.RunAsync();

@@ -6,5 +6,5 @@ public interface IGoodPriceRepository
 {
     public void Save(GoodPriceEntity goodPriceData);
     public void ClearData();
-    public Task<List<GoodPriceEntity>> QueryData(CancellationToken cancellationToken);
+    public Task<IReadOnlyList<GoodPriceEntity>> QueryData(CancellationToken cancellationToken);
 }

@@ -10,39 +10,47 @@ namespace OzonRoute.Api.Controllers.V2;
 
 [ApiController]
 [Route("v2/delivery-price")]
-public class DeliveryPriceController : ControllerBase
+public class V2DeliveryPriceController : ControllerBase
 {
     private readonly IServiceProvider _serviceProvider;
 
-    public DeliveryPriceController([FromServices] IServiceProvider serviceProvider)
+    public V2DeliveryPriceController([FromServices] IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
     }
 
     [HttpPost]
     [Route("calculate")]
-    public async Task<CalculateResponse> Calculate(CalculateRequest request)
+    [ProducesResponseType(typeof(CalculateResponse), 200)]
+    public async Task<IActionResult> Calculate([FromBody] CalculateRequest request)
     {
         using var scope = _serviceProvider.CreateAsyncScope();
         IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
 
         var requestModel = await request.MapRequestToModel();
-        double result = await priceCalculatorService.CalculatePrice(goods:requestModel, distance: 1000);
+        double resultPrice = await priceCalculatorService.CalculatePrice(goods:requestModel, distance: 1000);
 
-        return new CalculateResponse(result);
+        await priceCalculatorService.CalculateNewReportData(
+            goods: requestModel,
+            distance: 1000,
+            finalPrice: resultPrice
+        );
+
+        return Ok(new CalculateResponse(resultPrice));
     }
 
 
     [HttpPost]
     [Route("get-history")]
-    public async Task<List<GetHistoryResponse>> GetHistory(GetHistoryRequest request, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
+    public async Task<IActionResult> GetHistory([FromBody] GetHistoryRequest request, CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateAsyncScope();
         IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
 
-        List<CalculateLogModel> log = await priceCalculatorService.QueryLog(request.Take, cancellationToken);
-        List<GetHistoryResponse> response = await log.MapModelsToResponses();
+        IReadOnlyList<CalculateLogModel> log = await priceCalculatorService.QueryLog(request.Take, cancellationToken);
+        IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();
 
-        return response;
+        return Ok(response);
     }
 }
