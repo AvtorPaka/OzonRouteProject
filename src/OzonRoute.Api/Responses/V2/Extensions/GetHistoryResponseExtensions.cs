@@ -6,12 +6,13 @@ namespace OzonRoute.Api.Responses.V2.Extensions;
 public static class GetHistoryResponseExtensions
 {   
     private const double kgToGramsRatio = 1000.0d;
+    private const double cm3ToMm3Ratio = 1000.0d;
     public static GetHistoryResponse MapModelToResponse(this CalculateLogModel calculateLogModel)
     {
         return new GetHistoryResponse(
             At: calculateLogModel.At,
             Cargo: new CargoResponse(
-                Volume: calculateLogModel.Volume,
+                Volume: calculateLogModel.Volume * cm3ToMm3Ratio,
                 Weight: calculateLogModel.Weight * kgToGramsRatio),
             Price: calculateLogModel.Price
         );

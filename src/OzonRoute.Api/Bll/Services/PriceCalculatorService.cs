@@ -33,7 +33,7 @@ public class PriceCalculatorService : IPriceCalculatorService
 
         _goodPriceRepository.Save(new GoodPriceEntity(
             Price: finalPrice,
-            Volume: summaryVolume, // In mm^3
+            Volume: summaryVolume, // In cm^3
             Weight: summaryWeight,  // In gramms
             Distance: distance, // In metrs
             At: DateTime.UtcNow));
@@ -58,7 +58,7 @@ public class PriceCalculatorService : IPriceCalculatorService
     private static double CalculatePriceByVolume(List<GoodModel> goods, out double summaryVolume)
     {
         summaryVolume = goods.Sum(g => g.Lenght * g.Width * g.Height);
-        double volumePrice = summaryVolume  / Math.Pow(10.0, 3.0) * volumeRatio;
+        double volumePrice = summaryVolume * volumeRatio;
 
         return volumePrice;
     }
