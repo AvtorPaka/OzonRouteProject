@@ -1,6 +1,6 @@
-namespace OzonRoute.Api.Dal.Models;
+namespace OzonRoute.Api.Bll.Models;
 
-public record GoodEntity(
+public record GoodStoreModel(
     string Name,
     int Id,
     int Count,
@@ -10,5 +10,4 @@ public record GoodEntity(
     double Height = 0.0d,
     double Weight = 0.0d, //In kg
     double Price = 0.0d
-)
-{ }
+) {}

@@ -5,6 +5,7 @@ using OzonRoute.Api.Dal.Context;
 using OzonRoute.Api.Dal.Repositories.Interfaces;
 using OzonRoute.Api.Dal.Repositories;
 using OzonRoute.Api.Configuration.Models;
+using OzonRoute.Api.HostedServices;
 
 namespace OzonRoute.Api;
 
@@ -22,12 +23,16 @@ public sealed class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<DeliveryPriceContext>();
+        services.AddSingleton<GoodsContext>();
         services.AddScoped<IGoodPriceRepository, GoodPriceRepository>();
         services.AddScoped<IReportsRepository, ReportsRepository>();
-
+        services.AddScoped<IGoodsRepository, GoodsRepository>();
 
         services.Configure<PriceCalculatorOptions>(_configuration.GetSection("PriceCalculatorOptions"));
         services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
+
+        services.AddScoped<IGoodsService, GoodsService>();
+        services.AddHostedService<GoodsSyncHostedService>();
 
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen((SwaggerGenOptions o) =>
