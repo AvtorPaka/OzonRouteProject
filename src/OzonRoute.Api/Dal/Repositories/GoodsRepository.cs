@@ -26,4 +26,9 @@ public class GoodsRepository : IGoodsRepository
     {
         return await Task.FromResult(_goodsContext.Store.Select(kv => kv.Value).ToArray());
     }
+
+    public async Task<GoodEntity> Get(int id)
+    {
+        return await Task.FromResult(_goodsContext.Store[id]);
+    }
 }

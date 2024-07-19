@@ -36,10 +36,10 @@ public class V1DeliveryPriceController : ControllerBase
         return Ok(new CalculateResponse(resultPrice));
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route("get-history")]
     [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
-    public async Task<IActionResult> GetHistory([FromBody] GetHistoryRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetHistory([FromQuery] GetHistoryRequest request, CancellationToken cancellationToken)
     {
         IReadOnlyList<CalculateLogModel> log = await _priceCalculatorService.QueryLog(request.Take, cancellationToken);
         IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();
@@ -47,7 +47,7 @@ public class V1DeliveryPriceController : ControllerBase
         return Ok(response);
     }
 
-    [HttpPost]
+    [HttpDelete]
     [Route("delete-history")]
     [ProducesResponseType(200)]
     public async Task<IActionResult> DeleteHistory(CancellationToken cancellationToken)
@@ -57,7 +57,7 @@ public class V1DeliveryPriceController : ControllerBase
         return Ok();
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route("reports/01")]
     [ProducesResponseType(typeof(ReportsResponse), 200)]
     public async Task<IActionResult> Reports(CancellationToken cancellationToken)

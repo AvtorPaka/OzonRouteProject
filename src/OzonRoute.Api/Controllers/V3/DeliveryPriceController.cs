@@ -36,10 +36,10 @@ public class V3DeliveryPriceController : ControllerBase
         return Ok(new CalculateResponse(resultPrice));
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route("get-history")]
     [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
-    public async Task<IActionResult> GetHistory([FromBody] GetHistoryRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetHistory([FromQuery] GetHistoryRequest request, CancellationToken cancellationToken)
     {
         IReadOnlyList<CalculateLogModel> log = await _priceCalculatorService.QueryLog(request.Take, cancellationToken);
         IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();

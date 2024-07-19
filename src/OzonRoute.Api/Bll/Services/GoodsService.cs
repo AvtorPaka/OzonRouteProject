@@ -45,4 +45,9 @@ public class GoodsService : IGoodsService
             await _goodsRepository.AddOrUpdate(good, cancellationToken);
         }
     }
+
+    public async Task<GoodEntity> GetGoodFromData(int id)
+    {
+        return await _goodsRepository.Get(id);
+    }
 }

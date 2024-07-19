@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace OzonRoute.Api.Requests.V1;
 
 public record GoodProperties(

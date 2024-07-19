@@ -6,6 +6,7 @@ using OzonRoute.Api.Dal.Repositories.Interfaces;
 using OzonRoute.Api.Dal.Repositories;
 using OzonRoute.Api.Configuration.Models;
 using OzonRoute.Api.HostedServices;
+using System.Text.Json;
 
 namespace OzonRoute.Api;
 
@@ -41,6 +42,8 @@ public sealed class Startup
         });
 
         services.AddControllers();
+        services.AddHttpContextAccessor();
+        services.AddMvc().AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
     }
 
     public void Configure(IApplicationBuilder app)
@@ -50,6 +53,13 @@ public sealed class Startup
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+
+        //Buffering for logging requests data
+        app.Use(async (context, next) => 
+        {   
+            context.Request.EnableBuffering();
+            await next.Invoke();
+        });
 
         app.UseRouting();
         app.UseEndpoints(endpoints =>
