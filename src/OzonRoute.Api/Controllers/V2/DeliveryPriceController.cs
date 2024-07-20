@@ -5,6 +5,8 @@ using OzonRoute.Api.Requests.V2;
 using OzonRoute.Api.Requests.V2.Extensions;
 using OzonRoute.Api.Responses.V2;
 using OzonRoute.Api.Responses.V2.Extensions;
+using OzonRoute.Api.Validators.V2;
+using FluentValidation;
 
 namespace OzonRoute.Api.Controllers.V2;
 
@@ -23,7 +25,10 @@ public class V2DeliveryPriceController : ControllerBase
     [Route("calculate")]
     [ProducesResponseType(typeof(CalculateResponse), 200)]
     public async Task<IActionResult> Calculate([FromBody] CalculateRequest request)
-    {
+    {   
+        var validator = new CalculateRequestValidator();
+        await validator.ValidateAndThrowAsync(request);
+
         var requestModel = await request.MapRequestToModel();
         double resultPrice = await _priceCalculatorService.CalculatePrice(goods:requestModel, distance: 1000);
 
@@ -40,7 +45,10 @@ public class V2DeliveryPriceController : ControllerBase
     [Route("get-history")]
     [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
     public async Task<IActionResult> GetHistory([FromQuery] GetHistoryRequest request, CancellationToken cancellationToken)
-    {
+    {   
+        var validator = new GetHistoryRequestValidator();
+        await validator.ValidateAndThrowAsync(request, cancellationToken);
+
         IReadOnlyList<CalculateLogModel> log = await _priceCalculatorService.QueryLog(request.Take, cancellationToken);
         IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();
 

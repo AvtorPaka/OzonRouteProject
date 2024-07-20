@@ -20,7 +20,9 @@ public class GoodsSyncHostedService : BackgroundService
     {
         _logger.LogInformation(">>GoodsSync Host Service start executting. | Date : {curDate}", DateTime.Now);
 
-        using PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        await ProccesGoods(cancellationToken);
+
+        using PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(30));
         try
         {
             while (await periodicTimer.WaitForNextTickAsync(cancellationToken))
