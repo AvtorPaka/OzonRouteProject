@@ -29,13 +29,6 @@ public class PriceCalculatorService : IPriceCalculatorService
 
     public async Task<double> CalculatePrice(IReadOnlyList<GoodModel> goods, int distance = 1000)
     {
-        if (!goods.Any()) {
-            throw new ArgumentException("Goods count must be greater than 0");
-        }
-        if (distance <= 1) {
-            throw new ArgumentException("Shipping distance must be greater than 1");
-        }
-
         await Task.Delay(TimeSpan.FromMilliseconds(1)); //Fiction
 
         double finalPrice = CalculatePriceForOneMetr(goods, out double summaryVolume, out double summaryWeight) * distance;

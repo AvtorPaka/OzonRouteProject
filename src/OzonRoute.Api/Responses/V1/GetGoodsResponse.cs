@@ -1,10 +1,9 @@
-namespace OzonRoute.Api.Dal.Models;
-
-public record GoodEntity(
+namespace OzonRoute.Api.Responses.V1;
+public record GetGoodsResponse(
     string Name,
     int Id,
     int Count,
-    //In cm
+    //In m
     double Lenght = 0.0d,
     double Width = 0.0d,
     double Height = 0.0d,
