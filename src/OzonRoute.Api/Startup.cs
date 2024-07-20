@@ -74,6 +74,14 @@ public sealed class Startup
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapControllerRoute(
+                name: "v1/goods/veiew",
+                pattern: "v1/goods/view",
+                defaults: new {
+                    Controller = "V1GoodsView",
+                    Action = "Index"
+                }
+            );
         });
     }
 }

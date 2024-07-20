@@ -1,0 +1,17 @@
+@model OzonRoute.Api.Views.Models.GoodsPageViewModel;
+
+<h2>Goods in stock</h2>
+
+<ul>
+    @foreach (var goodModel in Model.Goods)
+    {
+        <li>
+            <p>Name: @goodModel.Name</p>
+            <p>Price: @goodModel.Price</p>
+            <p>Avaliable ammount: @goodModel.Count</p>
+            <p>Volume: @(Math.Round(goodModel.Height * goodModel.Lenght * goodModel.Width, 4))</p>
+            <p>Weight: @goodModel.Weight</p>
+            <p> <a href="/v1/goods/price?Id=@goodModel.Id">Стоимость доставки</a></p>
+        </li>
+    }
+</ul>
