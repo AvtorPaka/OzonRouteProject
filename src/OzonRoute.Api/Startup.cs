@@ -5,6 +5,10 @@ using OzonRoute.Api.Dal.Context;
 using OzonRoute.Api.Dal.Repositories.Interfaces;
 using OzonRoute.Api.Dal.Repositories;
 using OzonRoute.Api.Configuration.Models;
+using OzonRoute.Api.HostedServices;
+using System.Text.Json;
+using OzonRoute.Api.Controllers.ActionFilters;
+using System.Net;
 
 namespace OzonRoute.Api;
 
@@ -22,12 +26,16 @@ public sealed class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<DeliveryPriceContext>();
+        services.AddSingleton<GoodsContext>();
         services.AddScoped<IGoodPriceRepository, GoodPriceRepository>();
         services.AddScoped<IReportsRepository, ReportsRepository>();
-
+        services.AddScoped<IGoodsRepository, GoodsRepository>();
 
         services.Configure<PriceCalculatorOptions>(_configuration.GetSection("PriceCalculatorOptions"));
         services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
+
+        services.AddScoped<IGoodsService, GoodsService>();
+        services.AddHostedService<GoodsSyncHostedService>();
 
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen((SwaggerGenOptions o) =>
@@ -36,6 +44,15 @@ public sealed class Startup
         });
 
         services.AddControllers();
+        services.AddHttpContextAccessor();
+        services.AddMvc().AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
+
+        services.AddMvc().AddMvcOptions(o =>
+        {
+            o.Filters.Add(new ExceptionFilterAttribute());
+            o.Filters.Add(new ErrorResponseTypesAttribute((int)HttpStatusCode.InternalServerError));
+            o.Filters.Add(new ErrorResponseTypesAttribute((int)HttpStatusCode.BadRequest));
+        });
     }
 
     public void Configure(IApplicationBuilder app)
@@ -47,9 +64,24 @@ public sealed class Startup
         }
 
         app.UseRouting();
+        //Buffering for logging requests data
+        app.Use(async (context, next) =>
+        {
+            context.Request.EnableBuffering();
+            await next.Invoke();
+        });
+
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapControllerRoute(
+                name: "v1/goods/veiew",
+                pattern: "v1/goods/view",
+                defaults: new {
+                    Controller = "V1GoodsView",
+                    Action = "Index"
+                }
+            );
         });
     }
 }

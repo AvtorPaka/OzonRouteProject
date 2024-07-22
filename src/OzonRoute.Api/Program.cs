@@ -8,14 +8,6 @@ internal sealed class Program
         .ConfigureWebHostDefaults(webBuidler =>
         {
             webBuidler.UseStartup<Startup>();
-            webBuidler.ConfigureAppConfiguration((context, config) =>
-            {
-                //In fact no need for that cause WebHost do it automatically
-                if (context.HostingEnvironment.IsProduction())
-                {
-                    config.AddJsonFile("appsettings.Production.json", optional: true, reloadOnChange: true);
-                }
-            });
         })
         .ConfigureHostOptions(x =>
         {

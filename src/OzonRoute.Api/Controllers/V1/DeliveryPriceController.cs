@@ -5,6 +5,9 @@ using OzonRoute.Api.Requests.V1;
 using OzonRoute.Api.Requests.V1.Extensions;
 using OzonRoute.Api.Responses.V1;
 using OzonRoute.Api.Responses.V1.Extensions;
+using OzonRoute.Api.Validators.V1;
+using OzonRoute.Api.Controllers.ActionFilters;
+using FluentValidation;
 
 namespace OzonRoute.Api.Controllers.V1;
 
@@ -12,25 +15,25 @@ namespace OzonRoute.Api.Controllers.V1;
 [Route("v1/delivery-price")]
 public class V1DeliveryPriceController : ControllerBase
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IPriceCalculatorService _priceCalculatorService;
 
-    public V1DeliveryPriceController([FromServices] IServiceProvider serviceProvider)
+    public V1DeliveryPriceController([FromServices] IPriceCalculatorService priceCalculatorService)
     {
-        _serviceProvider = serviceProvider;
+        _priceCalculatorService = priceCalculatorService;
     }
 
     [HttpPost]
     [Route("calculate")]
     [ProducesResponseType(typeof(CalculateResponse), 200)]
     public async Task<IActionResult> Calculate([FromBody] CalculateRequest request)
-    {
-        using var scope = _serviceProvider.CreateAsyncScope();
-        IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
+    {   
+        var validator = new CalculateRequestValidator();
+        await validator.ValidateAndThrowAsync(request);
 
         var requestModel = await request.MapRequestToModel();
-        double resultPrice = await priceCalculatorService.CalculatePrice(goods: requestModel, distance: 1000);
+        double resultPrice = await _priceCalculatorService.CalculatePrice(goods: requestModel, distance: 1000);
         
-        await priceCalculatorService.CalculateNewReportData(
+        await _priceCalculatorService.CalculateNewReportData(
             goods: requestModel,
             distance: 1000,
             finalPrice: resultPrice
@@ -39,44 +42,36 @@ public class V1DeliveryPriceController : ControllerBase
         return Ok(new CalculateResponse(resultPrice));
     }
 
-
-    [HttpPost]
+    [HttpGet]
     [Route("get-history")]
     [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
-    public async Task<IActionResult> GetHistory([FromBody] GetHistoryRequest request, CancellationToken cancellationToken)
-    {
-        using var scope = _serviceProvider.CreateAsyncScope();
-        IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
+    public async Task<IActionResult> GetHistory([FromQuery] GetHistoryRequest request, CancellationToken cancellationToken)
+    {   
+        var validator = new GetHistoryRequestValidator();
+        await validator.ValidateAndThrowAsync(request, cancellationToken);
 
-        IReadOnlyList<CalculateLogModel> log = await priceCalculatorService.QueryLog(request.Take, cancellationToken);
+        IReadOnlyList<CalculateLogModel> log = await _priceCalculatorService.QueryLog(request.Take, cancellationToken);
         IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();
 
         return Ok(response);
     }
 
-    [HttpPost]
+    [HttpDelete]
     [Route("delete-history")]
     [ProducesResponseType(200)]
     public async Task<IActionResult> DeleteHistory(CancellationToken cancellationToken)
     {
         await Task.Delay(TimeSpan.FromMilliseconds(1), cancellationToken); //Fiction
-        using var scope = _serviceProvider.CreateAsyncScope();
-        IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
-
-        priceCalculatorService.ClearLog();
+        _priceCalculatorService.ClearLog();
         return Ok();
     }
 
-
-    [HttpPost]
+    [HttpGet]
     [Route("reports/01")]
     [ProducesResponseType(typeof(ReportsResponse), 200)]
     public async Task<IActionResult> Reports(CancellationToken cancellationToken)
     {
-        using var scope = _serviceProvider.CreateAsyncScope();
-        IPriceCalculatorService priceCalculatorService = scope.ServiceProvider.GetRequiredService<IPriceCalculatorService>();
-
-        ReportModel reportModel = await priceCalculatorService.GetReport(cancellationToken);
+        ReportModel reportModel = await _priceCalculatorService.GetReport(cancellationToken);
         ReportsResponse reportsResponse = await reportModel.MapModelToResponse();
 
         return Ok(reportsResponse);
