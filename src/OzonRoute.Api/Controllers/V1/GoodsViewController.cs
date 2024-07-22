@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using OzonRoute.Api.Bll.Models;
-using OzonRoute.Api.Bll.Services.Interfaces;
 using OzonRoute.Api.Responses.V1;
 using OzonRoute.Api.Responses.V1.Extensions;
 using OzonRoute.Api.Views.Models;
+using OzonRoute.Domain.Models;
+using OzonRoute.Domain.Services.Interfaces;
 
 namespace OzonRoute.Api.Controllers.V1;
 

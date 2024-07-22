@@ -1,14 +1,16 @@
 using Swashbuckle.AspNetCore.SwaggerGen;
-using OzonRoute.Api.Bll.Services.Interfaces;
-using OzonRoute.Api.Bll.Services;
-using OzonRoute.Api.Dal.Context;
-using OzonRoute.Api.Dal.Repositories.Interfaces;
-using OzonRoute.Api.Dal.Repositories;
-using OzonRoute.Api.Configuration.Models;
 using OzonRoute.Api.HostedServices;
 using System.Text.Json;
 using OzonRoute.Api.Controllers.ActionFilters;
 using System.Net;
+using OzonRoute.Infrastructure.Dal.Repositories;
+using OzonRoute.Domain.Shared.Data.Interfaces;
+using OzonRoute.Domain.Configuration.Models;
+using OzonRoute.Domain.Services;
+using OzonRoute.Domain.Services.Interfaces;
+using Microsoft.Extensions.Options;
+using OzonRoute.Api.Configuration.Extensions;
+using OzonRoute.Infrastructure.Dal.Contexts;
 
 namespace OzonRoute.Api;
 
@@ -32,7 +34,12 @@ public sealed class Startup
         services.AddScoped<IGoodsRepository, GoodsRepository>();
 
         services.Configure<PriceCalculatorOptions>(_configuration.GetSection("PriceCalculatorOptions"));
-        services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
+        
+        services.AddScoped<IPriceCalculatorService, PriceCalculatorService>(x => new PriceCalculatorService(
+            options: x.GetConfigurationSnapshot<PriceCalculatorOptions>(),
+            goodPriceRepository: x.GetRequiredService<IGoodPriceRepository>(),
+            reportsRepository: x.GetRequiredService<IReportsRepository>()
+        ));
 
         services.AddScoped<IGoodsService, GoodsService>();
         services.AddHostedService<GoodsSyncHostedService>();

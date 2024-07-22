@@ -1,5 +1,4 @@
-using OzonRoute.Api.Bll.Models;
-using OzonRoute.Api.Requests.V2;
+using OzonRoute.Domain.Models;
 
 namespace OzonRoute.Api.Responses.V2.Extensions;
 

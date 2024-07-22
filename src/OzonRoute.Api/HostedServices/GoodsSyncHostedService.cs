@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using OzonRoute.Api.Bll.Services.Interfaces;
+using OzonRoute.Domain.Services.Interfaces;
 
 namespace OzonRoute.Api.HostedServices;
 

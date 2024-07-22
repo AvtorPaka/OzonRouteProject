@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
-using OzonRoute.Api.Bll.Services.Interfaces;
-using OzonRoute.Api.Bll.Models;
 using OzonRoute.Api.Requests.V2;
 using OzonRoute.Api.Requests.V2.Extensions;
 using OzonRoute.Api.Responses.V2;
 using OzonRoute.Api.Responses.V2.Extensions;
 using OzonRoute.Api.Validators.V2;
 using FluentValidation;
+using OzonRoute.Domain.Services.Interfaces;
+using OzonRoute.Domain.Models;
 
 namespace OzonRoute.Api.Controllers.V2;
 
