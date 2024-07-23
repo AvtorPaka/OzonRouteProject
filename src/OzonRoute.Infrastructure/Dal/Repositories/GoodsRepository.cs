@@ -1,3 +1,4 @@
+using OzonRoute.Domain.Exceptions.Infrastructure;
 using OzonRoute.Domain.Shared.Data.Entities;
 using OzonRoute.Domain.Shared.Data.Interfaces;
 using OzonRoute.Infrastructure.Dal.Contexts;
@@ -27,7 +28,14 @@ internal sealed class GoodsRepository : IGoodsRepository
     }
 
     public async Task<GoodEntity> Get(int id)
-    {
-        return await Task.FromResult(_goodsContext.Store[id]);
+    {   
+        try
+        {
+            return await Task.FromResult(_goodsContext.Store[id]);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            throw new EntityNotFoundException("Not found", ex);
+        }
     }
 }

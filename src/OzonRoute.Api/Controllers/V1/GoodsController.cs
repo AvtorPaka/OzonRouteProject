@@ -34,26 +34,12 @@ public class V1GoodsController : ControllerBase
     [HttpGet]
     [Route("price")]
     [ProducesResponseType(typeof(CalculateResponse), 200)]
-    public async Task<IActionResult> Calculate(
+    public async Task<IActionResult> CalculateFullPrice(
         [FromServices] IPriceCalculatorService priceCalculatorService,
         [FromQuery(Name = "Id")] int id,
         CancellationToken cancellationToken)
     {
-        GoodEntity entity = await _goodsService.GetGoodFromData(id);
-        GoodModel goodModel = new GoodModel(
-            Lenght: entity.Lenght,
-            Width: entity.Width,
-            Height: entity.Height,
-            Weight: entity.Weight
-        );
-
-        double shipPrice = await priceCalculatorService.CalculatePrice(
-            new GoodModelsContainer(
-                Goods: [goodModel],
-                Distance: 1000
-            ),
-            cancellationToken);
-        double finalPrice = shipPrice += entity.Price;
+        double finalPrice = await _goodsService.CalculateFullPrice(priceCalculatorService, id, cancellationToken);
 
         return Ok(new CalculateResponse(finalPrice));
     }

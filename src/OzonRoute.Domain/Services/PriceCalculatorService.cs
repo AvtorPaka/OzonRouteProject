@@ -6,6 +6,8 @@ using OzonRoute.Domain.Shared.Data.Interfaces;
 using OzonRoute.Domain.Configuration.Models;
 using OzonRoute.Domain.Validators;
 using FluentValidation;
+using OzonRoute.Domain.Exceptions;
+using OzonRoute.Domain.Exceptions.Domain;
 
 namespace OzonRoute.Domain.Services;
 
@@ -25,6 +27,18 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
     }
 
     public async Task<double> CalculatePrice(GoodModelsContainer goodModelsContainer, CancellationToken cancellationToken)
+    {   
+        try
+        {
+            return await CalculatePriceUnsafe(goodModelsContainer, cancellationToken);
+        }
+        catch (ValidationException ex)
+        {
+            throw new DomainException("Invalid input data", ex);
+        }
+    }
+
+    private async Task<double> CalculatePriceUnsafe(GoodModelsContainer goodModelsContainer, CancellationToken cancellationToken)
     {
         var validator = new GoodModelsContainerValidator();
         await validator.ValidateAndThrowAsync(goodModelsContainer, cancellationToken);
@@ -65,7 +79,20 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
 
         return weightPrice;
     }
+
     public async Task<IReadOnlyList<CalculateLogModel>> QueryLog(GetHistoryModel model, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await QueryLogUnsafe(model, cancellationToken);
+        }
+        catch (ValidationException ex)
+        {
+            throw new DomainException("Invalid input data", ex);
+        }
+    }
+
+    private async Task<IReadOnlyList<CalculateLogModel>> QueryLogUnsafe(GetHistoryModel model, CancellationToken cancellationToken)
     {
         var validator = new GetHistoryModelValidator();
         await validator.ValidateAndThrowAsync(model, cancellationToken);
