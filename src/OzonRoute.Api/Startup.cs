@@ -8,9 +8,10 @@ using OzonRoute.Domain.Shared.Data.Interfaces;
 using OzonRoute.Domain.Configuration.Models;
 using OzonRoute.Domain.Services;
 using OzonRoute.Domain.Services.Interfaces;
-using Microsoft.Extensions.Options;
 using OzonRoute.Api.Configuration.Extensions;
 using OzonRoute.Infrastructure.Dal.Contexts;
+using OzonRoute.Infrastructure.Detached.Services;
+using OzonRoute.Infrastructure.Detached.Services.Interfaces;
 
 namespace OzonRoute.Api;
 
@@ -37,11 +38,12 @@ public sealed class Startup
         
         services.AddScoped<IPriceCalculatorService, PriceCalculatorService>(x => new PriceCalculatorService(
             options: x.GetConfigurationSnapshot<PriceCalculatorOptions>(),
-            goodPriceRepository: x.GetRequiredService<IGoodPriceRepository>(),
-            reportsRepository: x.GetRequiredService<IReportsRepository>()
+            goodPriceRepository: x.GetRequiredService<IGoodPriceRepository>()
         ));
 
         services.AddScoped<IGoodsService, GoodsService>();
+        services.AddScoped<IGoodsDetachedService, GoodsDetachedService>();
+        services.AddScoped<IReportsService, ReportsService>();
         services.AddHostedService<GoodsSyncHostedService>();
 
         services.AddEndpointsApiExplorer();

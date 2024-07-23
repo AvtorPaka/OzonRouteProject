@@ -24,7 +24,10 @@ public class V3DeliveryPriceController : ControllerBase
     [HttpPost]
     [Route("calculate")]
     [ProducesResponseType(typeof(CalculateResponse), 200)]
-    public async Task<IActionResult> Calculate([FromBody] CalculateRequest request)
+    public async Task<IActionResult> Calculate(
+        [FromServices] IReportsService reportsService,
+        [FromBody] CalculateRequest request,
+        CancellationToken cancellationToken)
     {   
         var validator = new CalculateRequestValidator();
         await validator.ValidateAndThrowAsync(request);
@@ -32,10 +35,11 @@ public class V3DeliveryPriceController : ControllerBase
         var requestModel = await request.MapRequestToModel();
         double resultPrice = await _priceCalculatorService.CalculatePrice(goods:requestModel, distance: request.Distance);
 
-        await _priceCalculatorService.CalculateNewReportData(
+        await reportsService.CalculateNewReportData(
             goods: requestModel,
             distance: request.Distance,
-            finalPrice: resultPrice
+            finalPrice: resultPrice,
+            cancellationToken: cancellationToken
         );
 
         return Ok(new CalculateResponse(resultPrice));

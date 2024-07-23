@@ -12,17 +12,14 @@ public class PriceCalculatorService : IPriceCalculatorService
     private readonly double _volumeToPriceRatio;
     private readonly double _weightToPriceRatio;
     private readonly IGoodPriceRepository _goodPriceRepository;
-    private readonly IReportsRepository _reportsRepository;
 
     public PriceCalculatorService(
         PriceCalculatorOptions options,
-        IGoodPriceRepository goodPriceRepository,
-        IReportsRepository reportsRepository)
+        IGoodPriceRepository goodPriceRepository)
     {
         _volumeToPriceRatio = options.VolumeToPriceRatio;
         _weightToPriceRatio = options.WeightToPriceRatio;
         _goodPriceRepository = goodPriceRepository;
-        _reportsRepository = reportsRepository;
     }
 
     public async Task<double> CalculatePrice(IReadOnlyList<GoodModel> goods, int distance = 1000)
@@ -65,15 +62,6 @@ public class PriceCalculatorService : IPriceCalculatorService
 
         return weightPrice;
     }
-
-    public async Task CalculateNewReportData(IReadOnlyList<GoodModel> goods, int distance, double finalPrice)
-    {
-        IReadOnlyList<GoodEntityReport> goodsEntities = await goods.MapModelsToEntitys();
-        _reportsRepository.CalculateNewMaxWeightAndDistance(goodsEntities, distance);
-        _reportsRepository.CalculateNewMaxVolumeAndDistance(goodsEntities, distance);
-        _reportsRepository.CalculateWavgPrice(finalPrice, goods.Count);
-    }
-
     public async Task<IReadOnlyList<CalculateLogModel>> QueryLog(int take, CancellationToken cancellationToken)
     {
         if (take <= 0)
@@ -90,13 +78,5 @@ public class PriceCalculatorService : IPriceCalculatorService
     public void ClearLog()
     {
         _goodPriceRepository.ClearData();
-    }
-
-    public async Task<ReportModel> GetReport(CancellationToken cancellationToken)
-    {
-        ReportEntity reportEntity = await _reportsRepository.GetReportData(cancellationToken);
-        ReportModel reportModel = await reportEntity.MapEntityToModel();
-
-        return reportModel;
     }
 }

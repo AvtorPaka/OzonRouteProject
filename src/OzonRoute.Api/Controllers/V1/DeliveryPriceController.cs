@@ -24,18 +24,22 @@ public class V1DeliveryPriceController : ControllerBase
     [HttpPost]
     [Route("calculate")]
     [ProducesResponseType(typeof(CalculateResponse), 200)]
-    public async Task<IActionResult> Calculate([FromBody] CalculateRequest request)
-    {   
+    public async Task<IActionResult> Calculate(
+        [FromServices] IReportsService reportsService,
+        [FromBody] CalculateRequest request,
+        CancellationToken cancellationToken)
+    {
         var validator = new CalculateRequestValidator();
         await validator.ValidateAndThrowAsync(request);
 
         var requestModel = await request.MapRequestToModel();
         double resultPrice = await _priceCalculatorService.CalculatePrice(goods: requestModel, distance: 1000);
-        
-        await _priceCalculatorService.CalculateNewReportData(
+
+        await reportsService.CalculateNewReportData(
             goods: requestModel,
             distance: 1000,
-            finalPrice: resultPrice
+            finalPrice: resultPrice,
+            cancellationToken: cancellationToken
         );
 
         return Ok(new CalculateResponse(resultPrice));
@@ -45,7 +49,7 @@ public class V1DeliveryPriceController : ControllerBase
     [Route("get-history")]
     [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
     public async Task<IActionResult> GetHistory([FromQuery] GetHistoryRequest request, CancellationToken cancellationToken)
-    {   
+    {
         var validator = new GetHistoryRequestValidator();
         await validator.ValidateAndThrowAsync(request, cancellationToken);
 
@@ -68,9 +72,11 @@ public class V1DeliveryPriceController : ControllerBase
     [HttpGet]
     [Route("reports/01")]
     [ProducesResponseType(typeof(ReportsResponse), 200)]
-    public async Task<IActionResult> Reports(CancellationToken cancellationToken)
+    public async Task<IActionResult> Reports(
+        [FromServices] IReportsService reportsService,
+        CancellationToken cancellationToken)
     {
-        ReportModel reportModel = await _priceCalculatorService.GetReport(cancellationToken);
+        ReportModel reportModel = await  reportsService.GetReport(cancellationToken);
         ReportsResponse reportsResponse = await reportModel.MapModelToResponse();
 
         return Ok(reportsResponse);
