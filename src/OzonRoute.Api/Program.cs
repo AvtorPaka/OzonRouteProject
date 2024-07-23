@@ -1,6 +1,6 @@
 namespace OzonRoute.Api;
 
-internal sealed class Program
+public sealed class Program
 {
     public static async Task Main()
     {
