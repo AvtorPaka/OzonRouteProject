@@ -20,7 +20,7 @@ public sealed class Startup
     }
 
     public void ConfigureServices(IServiceCollection services)
-    {   
+    {
         services
             .AddDomain(_configuration)
             .AddInfrastructure()
@@ -39,16 +39,16 @@ public sealed class Startup
         o.Filters.Add(new ExceptionFilterAttribute());
         o.Filters.Add(new ErrorResponseTypesAttribute((int)HttpStatusCode.InternalServerError));
         o.Filters.Add(new ErrorResponseTypesAttribute((int)HttpStatusCode.BadRequest));
-        
+
     }
 
     public void Configure(IApplicationBuilder app)
     {
-        if (_env.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
+        // if (_env.IsDevelopment())
+        // {
+        // }
+        app.UseSwagger();
+        app.UseSwaggerUI();
 
         app.UseRouting();
         //Buffering for logging requests data
@@ -64,7 +64,8 @@ public sealed class Startup
             endpoints.MapControllerRoute(
                 name: "v1/goods/veiew",
                 pattern: "v1/goods/view",
-                defaults: new {
+                defaults: new
+                {
                     Controller = "V1GoodsView",
                     Action = "Index"
                 }
