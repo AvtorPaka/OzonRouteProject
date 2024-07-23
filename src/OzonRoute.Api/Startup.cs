@@ -1,14 +1,10 @@
-using Swashbuckle.AspNetCore.SwaggerGen;
-using OzonRoute.Api.Bll.Services.Interfaces;
-using OzonRoute.Api.Bll.Services;
-using OzonRoute.Api.Dal.Context;
-using OzonRoute.Api.Dal.Repositories.Interfaces;
-using OzonRoute.Api.Dal.Repositories;
-using OzonRoute.Api.Configuration.Models;
 using OzonRoute.Api.HostedServices;
 using System.Text.Json;
 using OzonRoute.Api.Controllers.ActionFilters;
 using System.Net;
+using OzonRoute.Infrastructure.Extensions;
+using OzonRoute.Domain.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace OzonRoute.Api;
 
@@ -24,35 +20,26 @@ public sealed class Startup
     }
 
     public void ConfigureServices(IServiceCollection services)
+    {   
+        services
+            .AddDomain(_configuration)
+            .AddInfrastructure()
+            .AddControllers()
+            .AddMvcOptions(ConfigureMvc)
+            .Services
+            .AddEndpointsApiExplorer()
+            .AddSwaggerGen(o => o.CustomSchemaIds(x => x.FullName))
+            .AddHostedService<GoodsSyncHostedService>()
+            .AddHttpContextAccessor()
+            .AddMvc().AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
+    }
+
+    private static void ConfigureMvc(MvcOptions o)
     {
-        services.AddSingleton<DeliveryPriceContext>();
-        services.AddSingleton<GoodsContext>();
-        services.AddScoped<IGoodPriceRepository, GoodPriceRepository>();
-        services.AddScoped<IReportsRepository, ReportsRepository>();
-        services.AddScoped<IGoodsRepository, GoodsRepository>();
-
-        services.Configure<PriceCalculatorOptions>(_configuration.GetSection("PriceCalculatorOptions"));
-        services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
-
-        services.AddScoped<IGoodsService, GoodsService>();
-        services.AddHostedService<GoodsSyncHostedService>();
-
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen((SwaggerGenOptions o) =>
-        {
-            o.CustomSchemaIds(x => x.FullName);
-        });
-
-        services.AddControllers();
-        services.AddHttpContextAccessor();
-        services.AddMvc().AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
-
-        services.AddMvc().AddMvcOptions(o =>
-        {
-            o.Filters.Add(new ExceptionFilterAttribute());
-            o.Filters.Add(new ErrorResponseTypesAttribute((int)HttpStatusCode.InternalServerError));
-            o.Filters.Add(new ErrorResponseTypesAttribute((int)HttpStatusCode.BadRequest));
-        });
+        o.Filters.Add(new ExceptionFilterAttribute());
+        o.Filters.Add(new ErrorResponseTypesAttribute((int)HttpStatusCode.InternalServerError));
+        o.Filters.Add(new ErrorResponseTypesAttribute((int)HttpStatusCode.BadRequest));
+        
     }
 
     public void Configure(IApplicationBuilder app)

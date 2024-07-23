@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using OzonRoute.Api.Bll.Models;
-using OzonRoute.Api.Bll.Services.Interfaces;
-using OzonRoute.Api.Dal.Models;
 using OzonRoute.Api.Responses.V1;
 using OzonRoute.Api.Responses.V1.Extensions;
+using OzonRoute.Domain.Models;
+using OzonRoute.Domain.Services.Interfaces;
+using OzonRoute.Domain.Shared.Data.Entities;
 
 namespace OzonRoute.Api.Controllers.V1;
 
@@ -34,20 +34,12 @@ public class V1GoodsController : ControllerBase
     [HttpGet]
     [Route("price")]
     [ProducesResponseType(typeof(CalculateResponse), 200)]
-    public async Task<IActionResult> Calculate(
+    public async Task<IActionResult> CalculateFullPrice(
         [FromServices] IPriceCalculatorService priceCalculatorService,
-        [FromQuery(Name = "Id")] int id)
-    {   
-        GoodEntity entity = await _goodsService.GetGoodFromData(id);
-        GoodModel goodModel = new GoodModel(
-            Lenght: entity.Lenght,
-            Width: entity.Width,
-            Height: entity.Height,
-            Weight: entity.Weight
-        );
-
-        double shipPrice = await priceCalculatorService.CalculatePrice(goods: [goodModel], distance: 1000);
-        double finalPrice = shipPrice += entity.Price;
+        [FromQuery(Name = "Id")] int id,
+        CancellationToken cancellationToken)
+    {
+        double finalPrice = await _goodsService.CalculateFullPrice(priceCalculatorService, id, cancellationToken);
 
         return Ok(new CalculateResponse(finalPrice));
     }

@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using OzonRoute.Api.Bll.Services.Interfaces;
-using OzonRoute.Api.Bll.Models;
 using OzonRoute.Api.Requests.V3;
 using OzonRoute.Api.Requests.V3.Extensions;
 using OzonRoute.Api.Responses.V3;
 using OzonRoute.Api.Responses.V3.Extensions;
-using OzonRoute.Api.Validators.V3;
-using FluentValidation;
+using OzonRoute.Domain.Services.Interfaces;
+using OzonRoute.Domain.Models;
 
 namespace OzonRoute.Api.Controllers.V3;
 
@@ -24,18 +22,19 @@ public class V3DeliveryPriceController : ControllerBase
     [HttpPost]
     [Route("calculate")]
     [ProducesResponseType(typeof(CalculateResponse), 200)]
-    public async Task<IActionResult> Calculate([FromBody] CalculateRequest request)
+    public async Task<IActionResult> Calculate(
+        [FromServices] IReportsService reportsService,
+        [FromBody] CalculateRequest request,
+        CancellationToken cancellationToken)
     {   
-        var validator = new CalculateRequestValidator();
-        await validator.ValidateAndThrowAsync(request);
+        var requestModel = await request.MapRequestToModelsContainer();
+        double resultPrice = await _priceCalculatorService.CalculatePrice(requestModel, cancellationToken);
 
-        var requestModel = await request.MapRequestToModel();
-        double resultPrice = await _priceCalculatorService.CalculatePrice(goods:requestModel, distance: request.Distance);
-
-        await _priceCalculatorService.CalculateNewReportData(
-            goods: requestModel,
-            distance: request.Distance,
-            finalPrice: resultPrice
+        await reportsService.CalculateNewReportData(
+            goods: requestModel.Goods,
+            distance: requestModel.Distance,
+            finalPrice: resultPrice,
+            cancellationToken: cancellationToken
         );
 
         return Ok(new CalculateResponse(resultPrice));
@@ -46,10 +45,9 @@ public class V3DeliveryPriceController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
     public async Task<IActionResult> GetHistory([FromQuery] GetHistoryRequest request, CancellationToken cancellationToken)
     {   
-        var validator = new GetHistoryRequestValidator();
-        await validator.ValidateAndThrowAsync(request, cancellationToken);
-
-        IReadOnlyList<CalculateLogModel> log = await _priceCalculatorService.QueryLog(request.Take, cancellationToken);
+        IReadOnlyList<CalculateLogModel> log = await _priceCalculatorService.QueryLog(
+            model: new GetHistoryModel(request.Take),
+            cancellationToken);
         IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();
 
         return Ok(response);

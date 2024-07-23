@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc.Filters;
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using OzonRoute.Api.Responses.Errors;
+using OzonRoute.Domain.Exceptions.Domain;
 
 namespace OzonRoute.Api.Controllers.ActionFilters;
 public sealed class ExceptionFilterAttribute : Attribute, IExceptionFilter
@@ -11,8 +11,8 @@ public sealed class ExceptionFilterAttribute : Attribute, IExceptionFilter
     {
         switch (context.Exception)
         {
-            case ValidationException exception:
-                HandleValidationError(context, exception);
+            case DomainException exception:
+                HandleBadRequest(context, exception);
                 break;
             default:
                 HandleInternalServerError(context);
@@ -20,12 +20,13 @@ public sealed class ExceptionFilterAttribute : Attribute, IExceptionFilter
         }
     }
 
-    private static void HandleValidationError(ExceptionContext context, ValidationException validationException)
+    private static void HandleBadRequest(ExceptionContext context, Exception exception)
     {
         JsonResult jsonValidationResult = new(
             new ErrorResponse(
             StatusCode: HttpStatusCode.BadRequest,
-            Message: validationException.Message
+            ExceptionMessage: exception.Message,
+            InnerExceptionMessage: exception.InnerException != null ?  exception.InnerException.Message : ""
         ))
         {
             StatusCode = (int)HttpStatusCode.BadRequest
@@ -39,7 +40,8 @@ public sealed class ExceptionFilterAttribute : Attribute, IExceptionFilter
         JsonResult jsonErrorResult = new(
             new ErrorResponse(
             StatusCode: HttpStatusCode.InternalServerError,
-            Message: "Working on this."
+            ExceptionMessage: "Working on this.",
+            InnerExceptionMessage: ""
         ))
         {
             StatusCode = (int)HttpStatusCode.InternalServerError
