@@ -36,8 +36,9 @@ public class V1GoodsController : ControllerBase
     [ProducesResponseType(typeof(CalculateResponse), 200)]
     public async Task<IActionResult> Calculate(
         [FromServices] IPriceCalculatorService priceCalculatorService,
-        [FromQuery(Name = "Id")] int id)
-    {   
+        [FromQuery(Name = "Id")] int id,
+        CancellationToken cancellationToken)
+    {
         GoodEntity entity = await _goodsService.GetGoodFromData(id);
         GoodModel goodModel = new GoodModel(
             Lenght: entity.Lenght,
@@ -46,7 +47,12 @@ public class V1GoodsController : ControllerBase
             Weight: entity.Weight
         );
 
-        double shipPrice = await priceCalculatorService.CalculatePrice(goods: [goodModel], distance: 1000);
+        double shipPrice = await priceCalculatorService.CalculatePrice(
+            new GoodModelsContainer(
+                Goods: [goodModel],
+                Distance: 1000
+            ),
+            cancellationToken);
         double finalPrice = shipPrice += entity.Price;
 
         return Ok(new CalculateResponse(finalPrice));

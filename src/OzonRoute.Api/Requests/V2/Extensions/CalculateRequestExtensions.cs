@@ -5,7 +5,7 @@ namespace OzonRoute.Api.Requests.V2.Extensions;
 public static class CalculateRequestExtensions
 {   
     private const int mmToCMetrsRatio = 10;
-    public static async Task<IReadOnlyList<GoodModel>> MapRequestToModel(this CalculateRequest request)
+    private static IReadOnlyList<GoodModel> MapRequestToModels(this CalculateRequest request)
     {
         IEnumerable<GoodModel> result = request.Goods.Select(g => new GoodModel(
             Lenght: g.Lenght/ mmToCMetrsRatio,
@@ -13,6 +13,14 @@ public static class CalculateRequestExtensions
             Height: g.Height / mmToCMetrsRatio,
             Weight: g.Weight
         ));
-        return await Task.FromResult(result.ToList());
+        return result.ToList();
+    }
+
+    public static async Task<GoodModelsContainer> MapRequestToModelsContainer(this CalculateRequest request)
+    {
+        return await Task.FromResult(new GoodModelsContainer(
+            Goods: request.MapRequestToModels(),
+            Distance: 1000
+        ));
     }
 }

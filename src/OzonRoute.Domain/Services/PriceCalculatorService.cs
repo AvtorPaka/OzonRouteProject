@@ -4,6 +4,8 @@ using OzonRoute.Domain.Models.Extensions;
 using OzonRoute.Domain.Services.Interfaces;
 using OzonRoute.Domain.Shared.Data.Interfaces;
 using OzonRoute.Domain.Configuration.Models;
+using OzonRoute.Domain.Validators;
+using FluentValidation;
 
 namespace OzonRoute.Domain.Services;
 
@@ -22,17 +24,18 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         _goodPriceRepository = goodPriceRepository;
     }
 
-    public async Task<double> CalculatePrice(IReadOnlyList<GoodModel> goods, int distance = 1000)
+    public async Task<double> CalculatePrice(GoodModelsContainer goodModelsContainer, CancellationToken cancellationToken)
     {
-        await Task.Delay(TimeSpan.FromMilliseconds(1)); //Fiction
+        var validator = new GoodModelsContainerValidator();
+        await validator.ValidateAndThrowAsync(goodModelsContainer, cancellationToken);
 
-        double finalPrice = CalculatePriceForOneMetr(goods, out double summaryVolume, out double summaryWeight) * distance;
+        double finalPrice = CalculatePriceForOneMetr(goodModelsContainer.Goods , out double summaryVolume, out double summaryWeight) * goodModelsContainer.Distance;
 
         _goodPriceRepository.Save(new GoodPriceEntity(
             Price: finalPrice,
             Volume: summaryVolume, // In cm^3
             Weight: summaryWeight,  // In gramms
-            Distance: distance, // In metrs
+            Distance: goodModelsContainer.Distance, // In metrs
             At: DateTime.UtcNow));
 
         return finalPrice;
@@ -62,15 +65,13 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
 
         return weightPrice;
     }
-    public async Task<IReadOnlyList<CalculateLogModel>> QueryLog(int take, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<CalculateLogModel>> QueryLog(GetHistoryModel model, CancellationToken cancellationToken)
     {
-        if (take <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(take), take, "take parametr supposed to be greater than 0");
-        }
+        var validator = new GetHistoryModelValidator();
+        await validator.ValidateAndThrowAsync(model, cancellationToken);
 
         IReadOnlyList<GoodPriceEntity> log = await _goodPriceRepository.QueryData(cancellationToken);
-        IReadOnlyList<CalculateLogModel> processedLog = await log.OrderByDescending(g => g.At).Take(take).MapEntitiesToModels();
+        IReadOnlyList<CalculateLogModel> processedLog = await log.OrderByDescending(g => g.At).Take(model.Take).MapEntitiesToModels();
 
         return processedLog;
     }

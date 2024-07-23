@@ -3,8 +3,6 @@ using OzonRoute.Api.Requests.V1;
 using OzonRoute.Api.Requests.V1.Extensions;
 using OzonRoute.Api.Responses.V1;
 using OzonRoute.Api.Responses.V1.Extensions;
-using OzonRoute.Api.Validators.V1;
-using FluentValidation;
 using OzonRoute.Domain.Services.Interfaces;
 using OzonRoute.Domain.Models;
 
@@ -29,15 +27,12 @@ public class V1DeliveryPriceController : ControllerBase
         [FromBody] CalculateRequest request,
         CancellationToken cancellationToken)
     {
-        var validator = new CalculateRequestValidator();
-        await validator.ValidateAndThrowAsync(request);
-
-        var requestModel = await request.MapRequestToModel();
-        double resultPrice = await _priceCalculatorService.CalculatePrice(goods: requestModel, distance: 1000);
+        var requestModel = await request.MapRequestToModelsContainer();
+        double resultPrice = await _priceCalculatorService.CalculatePrice(requestModel, cancellationToken);
 
         await reportsService.CalculateNewReportData(
-            goods: requestModel,
-            distance: 1000,
+            goods: requestModel.Goods,
+            distance: requestModel.Distance,
             finalPrice: resultPrice,
             cancellationToken: cancellationToken
         );
@@ -50,10 +45,9 @@ public class V1DeliveryPriceController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
     public async Task<IActionResult> GetHistory([FromQuery] GetHistoryRequest request, CancellationToken cancellationToken)
     {
-        var validator = new GetHistoryRequestValidator();
-        await validator.ValidateAndThrowAsync(request, cancellationToken);
-
-        IReadOnlyList<CalculateLogModel> log = await _priceCalculatorService.QueryLog(request.Take, cancellationToken);
+        IReadOnlyList<CalculateLogModel> log = await _priceCalculatorService.QueryLog(
+            model: new GetHistoryModel(request.Take),
+            cancellationToken);
         IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();
 
         return Ok(response);
