@@ -4,7 +4,7 @@ using OzonRoute.Infrastructure.Dal.Contexts;
 
 namespace OzonRoute.Infrastructure.Dal.Repositories;
 
-public class GoodsRepository : IGoodsRepository
+internal sealed class GoodsRepository : IGoodsRepository
 {
     private readonly GoodsContext _goodsContext;
 

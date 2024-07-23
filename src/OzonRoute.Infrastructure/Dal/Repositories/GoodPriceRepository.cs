@@ -4,7 +4,7 @@ using OzonRoute.Infrastructure.Dal.Contexts;
 
 namespace OzonRoute.Infrastructure.Dal.Repositories;
 
-public class GoodPriceRepository : IGoodPriceRepository
+internal sealed class GoodPriceRepository : IGoodPriceRepository
 {
     private readonly DeliveryPriceContext _deliveryPriceContext;
 

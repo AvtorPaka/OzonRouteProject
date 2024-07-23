@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OzonRoute.Domain.Services.Interfaces;
-using OzonRoute.Infrastructure.Detached.Services.Interfaces;
+using OzonRoute.Infrastructure.External.Services.Interfaces;
 
 namespace OzonRoute.Api.HostedServices;
 
@@ -23,7 +23,7 @@ public class GoodsSyncHostedService : BackgroundService
 
         await ProccesGoods(cancellationToken);
 
-        using PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        using PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(30));
         try
         {
             while (await periodicTimer.WaitForNextTickAsync(cancellationToken))

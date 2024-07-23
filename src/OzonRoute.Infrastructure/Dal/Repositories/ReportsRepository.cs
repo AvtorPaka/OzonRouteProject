@@ -4,7 +4,7 @@ using OzonRoute.Infrastructure.Dal.Contexts;
 
 namespace OzonRoute.Infrastructure.Dal.Repositories;
 
-public class ReportsRepository : IReportsRepository
+internal sealed class ReportsRepository : IReportsRepository
 {
     private readonly DeliveryPriceContext _deliveryPriceContext;
 
@@ -23,7 +23,7 @@ public class ReportsRepository : IReportsRepository
         _deliveryPriceContext.Report.SummaryPrice += goodsFinalPrice;
         _deliveryPriceContext.Report.TotalNumberOfGoods += goodsCount;
     }
-    
+
     public void UpdateMaxVolumeAndDistance(double maxVolume, int distance)
     {
         _deliveryPriceContext.Report.MaxVolume = maxVolume;

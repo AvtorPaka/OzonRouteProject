@@ -1,17 +1,10 @@
-using Swashbuckle.AspNetCore.SwaggerGen;
 using OzonRoute.Api.HostedServices;
 using System.Text.Json;
 using OzonRoute.Api.Controllers.ActionFilters;
 using System.Net;
-using OzonRoute.Infrastructure.Dal.Repositories;
-using OzonRoute.Domain.Shared.Data.Interfaces;
-using OzonRoute.Domain.Configuration.Models;
-using OzonRoute.Domain.Services;
-using OzonRoute.Domain.Services.Interfaces;
-using OzonRoute.Api.Configuration.Extensions;
-using OzonRoute.Infrastructure.Dal.Contexts;
-using OzonRoute.Infrastructure.Detached.Services;
-using OzonRoute.Infrastructure.Detached.Services.Interfaces;
+using OzonRoute.Infrastructure.Extensions;
+using OzonRoute.Domain.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace OzonRoute.Api;
 
@@ -27,41 +20,26 @@ public sealed class Startup
     }
 
     public void ConfigureServices(IServiceCollection services)
+    {   
+        services
+            .AddDomain(_configuration)
+            .AddInfrastructure()
+            .AddControllers()
+            .AddMvcOptions(ConfigureMvc)
+            .Services
+            .AddEndpointsApiExplorer()
+            .AddSwaggerGen(o => o.CustomSchemaIds(x => x.FullName))
+            .AddHostedService<GoodsSyncHostedService>()
+            .AddHttpContextAccessor()
+            .AddMvc().AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
+    }
+
+    private static void ConfigureMvc(MvcOptions o)
     {
-        services.AddSingleton<DeliveryPriceContext>();
-        services.AddSingleton<GoodsContext>();
-        services.AddScoped<IGoodPriceRepository, GoodPriceRepository>();
-        services.AddScoped<IReportsRepository, ReportsRepository>();
-        services.AddScoped<IGoodsRepository, GoodsRepository>();
-
-        services.Configure<PriceCalculatorOptions>(_configuration.GetSection("PriceCalculatorOptions"));
+        o.Filters.Add(new ExceptionFilterAttribute());
+        o.Filters.Add(new ErrorResponseTypesAttribute((int)HttpStatusCode.InternalServerError));
+        o.Filters.Add(new ErrorResponseTypesAttribute((int)HttpStatusCode.BadRequest));
         
-        services.AddScoped<IPriceCalculatorService, PriceCalculatorService>(x => new PriceCalculatorService(
-            options: x.GetConfigurationSnapshot<PriceCalculatorOptions>(),
-            goodPriceRepository: x.GetRequiredService<IGoodPriceRepository>()
-        ));
-
-        services.AddScoped<IGoodsService, GoodsService>();
-        services.AddScoped<IGoodsDetachedService, GoodsDetachedService>();
-        services.AddScoped<IReportsService, ReportsService>();
-        services.AddHostedService<GoodsSyncHostedService>();
-
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen((SwaggerGenOptions o) =>
-        {
-            o.CustomSchemaIds(x => x.FullName);
-        });
-
-        services.AddControllers();
-        services.AddHttpContextAccessor();
-        services.AddMvc().AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
-
-        services.AddMvc().AddMvcOptions(o =>
-        {
-            o.Filters.Add(new ExceptionFilterAttribute());
-            o.Filters.Add(new ErrorResponseTypesAttribute((int)HttpStatusCode.InternalServerError));
-            o.Filters.Add(new ErrorResponseTypesAttribute((int)HttpStatusCode.BadRequest));
-        });
     }
 
     public void Configure(IApplicationBuilder app)

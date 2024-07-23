@@ -1,6 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace OzonRoute.Api.Configuration.Extensions;
+namespace OzonRoute.Domain.DependencyInjection.Extensions;
 public static class ConfigurationExtensions
 {
     public static T GetConfigurationSnapshot<T>(this IServiceProvider serviceProvider) where T : class

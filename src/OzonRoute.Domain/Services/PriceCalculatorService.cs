@@ -7,7 +7,7 @@ using OzonRoute.Domain.Configuration.Models;
 
 namespace OzonRoute.Domain.Services;
 
-public class PriceCalculatorService : IPriceCalculatorService
+internal sealed class PriceCalculatorService : IPriceCalculatorService
 {
     private readonly double _volumeToPriceRatio;
     private readonly double _weightToPriceRatio;

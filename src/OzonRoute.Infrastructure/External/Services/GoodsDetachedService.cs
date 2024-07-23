@@ -2,11 +2,11 @@ using System.Security.Cryptography;
 using OzonRoute.Domain.Models;
 using OzonRoute.Domain.Models.Extensions;
 using OzonRoute.Domain.Shared.Data.Entities;
-using OzonRoute.Infrastructure.Detached.Services.Interfaces;
+using OzonRoute.Infrastructure.External.Services.Interfaces;
 
-namespace OzonRoute.Infrastructure.Detached.Services;
+namespace OzonRoute.Infrastructure.External.Services;
 
-public class GoodsDetachedService : IGoodsDetachedService
+internal sealed class GoodsDetachedService : IGoodsDetachedService
 {
     //In educational purposes
     private readonly List<GoodStoreModel> _goods = new List<GoodStoreModel>()

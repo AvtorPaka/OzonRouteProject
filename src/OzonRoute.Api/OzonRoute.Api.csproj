@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OzonRoute.Infrastructure\OzonRoute.Infrastructure.csproj" />
+    <ProjectReference Include="..\OzonRoute.Domain.DependencyInjection.Extensions\OzonRoute.Domain.DependencyInjection.Extensions.csproj" />
   </ItemGroup>
 
 </Project>

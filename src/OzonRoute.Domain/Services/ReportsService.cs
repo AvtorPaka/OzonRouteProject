@@ -6,7 +6,7 @@ using OzonRoute.Domain.Shared.Data.Interfaces;
 
 namespace OzonRoute.Domain.Services;
 
-public class ReportsService : IReportsService
+internal sealed class ReportsService : IReportsService
 {   
     private readonly IReportsRepository _reportsRepository;
 

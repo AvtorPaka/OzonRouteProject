@@ -7,7 +7,7 @@ using OzonRoute.Domain.Shared.Data.Interfaces;
 
 namespace OzonRoute.Domain.Services;
 
-public class GoodsService : IGoodsService
+internal sealed class GoodsService : IGoodsService
 {
     private readonly IGoodsRepository _goodsRepository;
 
