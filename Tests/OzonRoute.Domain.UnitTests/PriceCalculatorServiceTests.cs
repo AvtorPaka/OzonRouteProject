@@ -27,6 +27,7 @@ public class PriceCalculatorServiceTests
         //Act, Assert
         await Assert.ThrowsAsync<DomainException>(async () => await cut.CalculatePrice(
             new GoodModelsContainer(
+            UserId: 1,
             Goods: Array.Empty<GoodModel>().ToList(),
             Distance: 1000),
             cancellationToken: cts.Token));
@@ -38,6 +39,7 @@ public class PriceCalculatorServiceTests
         {
             yield return new object[] {
             new GoodModelsContainer(
+                UserId: 1,
                 Goods: new List<GoodModel>() {new GoodModel(
                     Lenght: 10,
                     Width: 10,
@@ -48,6 +50,7 @@ public class PriceCalculatorServiceTests
 
             yield return new object[] {
             new GoodModelsContainer(
+                UserId: 1,
                 Goods: new List<GoodModel>() {new GoodModel(
                     Lenght: 20,
                     Width: 20,
@@ -104,6 +107,7 @@ public class PriceCalculatorServiceTests
         //Act
         double result = await cut.CalculatePrice(
             new GoodModelsContainer(
+            UserId: 1,
             Goods: new List<GoodModel>() {new GoodModel(
                 Lenght: 10,
                 Width: 10,

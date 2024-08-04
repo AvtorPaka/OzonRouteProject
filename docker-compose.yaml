@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+  bd:
+    image: postgres:latest
+    container_name: price-calculator-local
+    restart: always
+    user: postgres
+    secrets:
+      - db_password
+    environment:
+      POSTGRES_DB: "price-calulator"
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    ports:
+      - 15432:5432
+
+secrets:
+  db_password:
+    file: secrets/Databases/PriceCalculator/password.txt

@@ -26,6 +26,7 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         _goodPriceRepository = goodPriceRepository;
     }
 
+    //TODO: Change QUERYING Data
     public async Task<double> CalculatePrice(GoodModelsContainer goodModelsContainer, CancellationToken cancellationToken)
     {   
         try
@@ -38,6 +39,7 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         }
     }
 
+    //TODO: Change QUERYING Data
     private async Task<double> CalculatePriceUnsafe(GoodModelsContainer goodModelsContainer, CancellationToken cancellationToken)
     {
         var validator = new GoodModelsContainerValidator();
@@ -80,6 +82,7 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         return weightPrice;
     }
 
+    //TODO: Change impementation
     public async Task<IReadOnlyList<CalculateLogModel>> QueryLog(GetHistoryModel model, CancellationToken cancellationToken)
     {
         try
@@ -92,6 +95,8 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         }
     }
 
+
+    //TODO: Change impementation
     private async Task<IReadOnlyList<CalculateLogModel>> QueryLogUnsafe(GetHistoryModel model, CancellationToken cancellationToken)
     {
         var validator = new GetHistoryModelValidator();

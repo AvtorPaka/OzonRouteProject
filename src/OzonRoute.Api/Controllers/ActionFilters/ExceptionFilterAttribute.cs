@@ -25,8 +25,7 @@ public sealed class ExceptionFilterAttribute : Attribute, IExceptionFilter
         JsonResult jsonValidationResult = new(
             new ErrorResponse(
             StatusCode: HttpStatusCode.BadRequest,
-            ExceptionMessage: exception.Message,
-            InnerExceptionMessage: exception.InnerException != null ?  exception.InnerException.Message : ""
+            Exceptions: QueryExceptions(exception)
         ))
         {
             StatusCode = (int)HttpStatusCode.BadRequest
@@ -40,13 +39,24 @@ public sealed class ExceptionFilterAttribute : Attribute, IExceptionFilter
         JsonResult jsonErrorResult = new(
             new ErrorResponse(
             StatusCode: HttpStatusCode.InternalServerError,
-            ExceptionMessage: "Working on this.",
-            InnerExceptionMessage: ""
+            Exceptions: new List<string> {"Working on this."}
         ))
         {
             StatusCode = (int)HttpStatusCode.InternalServerError
         };
 
         context.Result = jsonErrorResult;
+    }
+
+    private static IEnumerable<string> QueryExceptions(Exception exception)
+    {   
+        yield return exception.Message;
+
+        Exception? innerException = exception.InnerException;
+        while (innerException != null)
+        {
+            yield return innerException.Message;
+            innerException = innerException.InnerException;
+        }
     }
 }

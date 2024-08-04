@@ -1,4 +1,6 @@
 namespace OzonRoute.Domain.Models;
 public record GetHistoryModel(
-    int Take
+    long UserId,
+    int Take,
+    int Skip
 ) {}

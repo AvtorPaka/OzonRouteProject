@@ -46,7 +46,13 @@ public sealed class BasicIntegrationTests
         var response = await contorller.Calculate(repository, request, cts.Token);
 
         //Assert
-        var actionResult = await contorller.GetHistory(new Api.Requests.V1.GetHistoryRequest(Take: int.MaxValue), cts.Token);
+        var actionResult = await contorller.GetHistory(
+            new Api.Requests.V1.GetHistoryRequest(
+                UserId: 1,
+                Take: int.MaxValue,
+                Skip: 0
+                ),
+             cts.Token);
         var objectResult = actionResult as ObjectResult;
 
         Assert.NotNull(objectResult);

@@ -19,6 +19,7 @@ public static class CalculateRequestExtensions
     public static async Task<GoodModelsContainer> MapRequestToModelsContainer(this CalculateRequest request)
     {
         return await Task.FromResult(new GoodModelsContainer(
+            UserId: request.UserId,
             Goods: request.MapRequestToModels(),
             Distance: request.Distance
         ));

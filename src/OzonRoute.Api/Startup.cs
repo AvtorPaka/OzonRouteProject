@@ -20,18 +20,20 @@ public sealed class Startup
     }
 
     public void ConfigureServices(IServiceCollection services)
-    {
+    {   
         services
             .AddDomain(_configuration)
-            .AddInfrastructure()
+            .AddDalInfrastucture(_configuration)
+            .AddInfrastructureServices()
+            .AddDalRepositories()
             .AddControllers()
+            .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower)
             .AddMvcOptions(ConfigureMvc)
             .Services
             .AddEndpointsApiExplorer()
             .AddSwaggerGen(o => o.CustomSchemaIds(x => x.FullName))
             .AddHostedService<GoodsSyncHostedService>()
-            .AddHttpContextAccessor()
-            .AddMvc().AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
+            .AddHttpContextAccessor();
     }
 
     private static void ConfigureMvc(MvcOptions o)

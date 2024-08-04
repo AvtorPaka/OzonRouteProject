@@ -7,6 +7,7 @@ public class GoodModelsContainerValidator : AbstractValidator<GoodModelsContaine
     public GoodModelsContainerValidator()
     {
         RuleFor(x => x.Goods).NotEmpty().NotNull();
+        RuleFor(x => x.UserId).GreaterThan(0);
         RuleFor(x => x.Distance).GreaterThan(1).LessThanOrEqualTo(int.MaxValue);
         RuleForEach(x => x.Goods).ChildRules(good =>
         {

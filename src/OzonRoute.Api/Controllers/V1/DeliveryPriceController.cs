@@ -46,7 +46,11 @@ public class V1DeliveryPriceController : ControllerBase
     public async Task<IActionResult> GetHistory([FromQuery] GetHistoryRequest request, CancellationToken cancellationToken)
     {
         IReadOnlyList<CalculateLogModel> log = await _priceCalculatorService.QueryLog(
-            model: new GetHistoryModel(request.Take),
+            model: new GetHistoryModel(
+                UserId: request.UserId,
+                Take: request.Take,
+                Skip: request.Skip
+            ),
             cancellationToken);
         IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();
 

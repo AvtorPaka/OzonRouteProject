@@ -58,8 +58,11 @@ internal sealed class GoodsService : IGoodsService
             Weight: entity.Weight
         );
 
+        // TODO: Do smth with UserId
+        //  : TEST
         double shipPrice = await priceCalculatorService.CalculatePrice(
             new GoodModelsContainer(
+                UserId: 1,
                 Goods: [goodModel],
                 Distance: 1000
             ),
