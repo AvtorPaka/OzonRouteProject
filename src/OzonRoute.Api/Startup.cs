@@ -33,7 +33,8 @@ public sealed class Startup
             .AddEndpointsApiExplorer()
             .AddSwaggerGen(o => o.CustomSchemaIds(x => x.FullName))
             .AddHostedService<GoodsSyncHostedService>()
-            .AddHttpContextAccessor();
+            .AddHttpContextAccessor()
+            .AddControllersWithViews().AddRazorRuntimeCompilation();
     }
 
     private static void ConfigureMvc(MvcOptions o)

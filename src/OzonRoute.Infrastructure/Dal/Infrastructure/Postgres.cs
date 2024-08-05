@@ -25,6 +25,6 @@ public static class Postgres
                 return postgreCfg.Value.ConnectionString;
             })
             .ScanIn(typeof(Postgres).Assembly).For.Migrations())
-            .AddLogging(x => x.AddFluentMigratorConsole());
+            .AddLogging(x => x.AddFluentMigratorConsole()); //Also duplicates default Microsoft.Logging, annoying
     }
 }

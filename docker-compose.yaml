@@ -9,7 +9,7 @@ services:
     secrets:
       - db_password
     environment:
-      POSTGRES_DB: "price-calulator"
+      POSTGRES_DB: "price-calculator"
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     ports:
       - 15432:5432

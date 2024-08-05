@@ -1,3 +1,5 @@
+using OzonRoute.Infrastructure.Extensions;
+
 namespace OzonRoute.Api;
 
 public sealed class Program
@@ -8,6 +10,9 @@ public sealed class Program
         .ConfigureWebHostDefaults(webBuidler => webBuidler.UseStartup<Startup>())
         .ConfigureHostOptions(x => x.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
 
-        await builder.Build().RunAsync();
+        await builder
+            .Build()
+            .MigrateUp()
+            .RunAsync();
     }
 }

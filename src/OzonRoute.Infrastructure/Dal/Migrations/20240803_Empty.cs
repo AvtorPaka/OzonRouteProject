@@ -8,13 +8,13 @@ namespace OzonRoute.Infrastructure.Dal.Migrations;
 [Migration(version: 20240803, TransactionBehavior.None)]
 public class Empty : Migration
 {
-    public override void Down()
-    {
-        
-    }
-
     public override void Up()
     {
 
     }
+    public override void Down()
+    {
+
+    }
+
 }

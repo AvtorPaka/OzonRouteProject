@@ -59,10 +59,9 @@ internal sealed class GoodsService : IGoodsService
         );
 
         // TODO: Do smth with UserId
-        //  : TEST
         double shipPrice = await priceCalculatorService.CalculatePrice(
             new GoodModelsContainer(
-                UserId: 1,
+                UserId: int.MaxValue/2,
                 Goods: [goodModel],
                 Distance: 1000
             ),

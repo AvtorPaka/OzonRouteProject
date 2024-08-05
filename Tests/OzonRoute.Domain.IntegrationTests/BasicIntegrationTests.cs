@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using OzonRoute.Api.Controllers.V1;
 using OzonRoute.Api.Responses.V1;
+using OzonRoute.Domain.IntegrationTests.Fixtures;
 using OzonRoute.Domain.Services.Interfaces;
 using Xunit.Abstractions;
 
