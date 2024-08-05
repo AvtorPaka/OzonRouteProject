@@ -7,7 +7,7 @@ public class InitSchema : Migration
 {
     public override void Up()
     {
-        Create.Table("goods")
+        Create.Table("DeliveryGoods")
             .WithColumn("id").AsInt64().PrimaryKey("goods_pk").Identity()
             .WithColumn("user_id").AsInt64().NotNullable()
             .WithColumn("width").AsDouble().NotNullable()
@@ -15,27 +15,28 @@ public class InitSchema : Migration
             .WithColumn("length").AsDouble().NotNullable()
             .WithColumn("weight").AsDouble().NotNullable();
 
-        Create.Table("calculations")
+        Create.Table("Calculations")
             .WithColumn("id").AsInt64().PrimaryKey("calculations_pk").Identity()
             .WithColumn("user_id").AsInt64().NotNullable()
             .WithColumn("good_ids").AsCustom("bigint[]").NotNullable() //Ugly af, NT rework
             .WithColumn("total_volume").AsDouble().NotNullable()
             .WithColumn("total_weight").AsDouble().NotNullable()
             .WithColumn("price").AsDecimal().NotNullable()
+            .WithColumn("distance").AsDouble().NotNullable()
             .WithColumn("at").AsDateTimeOffset().NotNullable();
 
-        Create.Index("goods_user_id_index")
-            .OnTable("goods")
+        Create.Index("delivery_goods_user_id_index")
+            .OnTable("DeliveryGoods")
             .OnColumn("user_id");
 
         Create.Index("calculations_user_id_index")
-            .OnTable("calculations")
+            .OnTable("Calculations")
             .OnColumn("user_id");
     }
     public override void Down()
     {
-        Delete.Table("goods");
-        Delete.Table("calculations");
+        Delete.Table("DeliveryGoods");
+        Delete.Table("Calculations");
     }
 
 }

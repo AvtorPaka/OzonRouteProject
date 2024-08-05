@@ -3,9 +3,9 @@ using OzonRoute.Domain.Shared.Data.Entities;
 
 namespace OzonRoute.Domain.Services.Interfaces;
 
-public interface IGoodsService
+public interface IStorageGoodsService
 {
-    public Task<IReadOnlyList<GoodStoreModel>> GetGoodsFromData(CancellationToken cancellationToken);
-    public Task UpdateGoods(IEnumerable<GoodEntity> goodEntities, CancellationToken cancellationToken);
+    public Task<IReadOnlyList<StorageGoodModel>> GetGoodsFromStorage(CancellationToken cancellationToken);
+    public Task UpdateGoods(IEnumerable<StorageGoodEntity> goodEntities, CancellationToken cancellationToken);
     public Task<double> CalculateFullPrice(IPriceCalculatorService priceCalculatorService, int id, CancellationToken cancellationToken);
 }

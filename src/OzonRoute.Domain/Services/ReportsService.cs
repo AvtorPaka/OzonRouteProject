@@ -23,14 +23,14 @@ internal sealed class ReportsService : IReportsService
         return reportModel;
     }
 
-    public async Task CalculateNewReportData(IReadOnlyList<GoodModel> goods, int distance, double finalPrice, CancellationToken cancellationToken)
+    public async Task CalculateNewReportData(IReadOnlyList<DeliveryGoodModel> goods, int distance, double finalPrice, CancellationToken cancellationToken)
     {   
         await CalculateNewMaxVolumeAndDistance(goods, distance, cancellationToken);
         await CalculateNewMaxWeightAndDistance(goods, distance, cancellationToken);
         _reportsRepository.UpdateWavgPrice(finalPrice, goods.Count);
     }
 
-    private async Task CalculateNewMaxWeightAndDistance(IReadOnlyCollection<GoodModel> goods, int distance, CancellationToken cancellationToken)
+    private async Task CalculateNewMaxWeightAndDistance(IReadOnlyCollection<DeliveryGoodModel> goods, int distance, CancellationToken cancellationToken)
     {   
         ReportEntity currentReport = await _reportsRepository.GetReportData(cancellationToken);
 
@@ -41,7 +41,7 @@ internal sealed class ReportsService : IReportsService
         }
     }
 
-    private async Task CalculateNewMaxVolumeAndDistance(IReadOnlyCollection<GoodModel> goods, int distance, CancellationToken cancellationToken)
+    private async Task CalculateNewMaxVolumeAndDistance(IReadOnlyCollection<DeliveryGoodModel> goods, int distance, CancellationToken cancellationToken)
     {   
         ReportEntity currentReport = await _reportsRepository.GetReportData(cancellationToken);
 

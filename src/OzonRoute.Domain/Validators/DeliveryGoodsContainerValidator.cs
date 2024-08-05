@@ -2,9 +2,9 @@ using FluentValidation;
 using OzonRoute.Domain.Models;
 
 namespace OzonRoute.Domain.Validators;
-public class GoodModelsContainerValidator : AbstractValidator<GoodModelsContainer>
+public class DeliveryGoodsContainerValidator : AbstractValidator<DeliveryGoodsContainer>
 {
-    public GoodModelsContainerValidator()
+    public DeliveryGoodsContainerValidator()
     {
         RuleFor(x => x.Goods).NotEmpty().NotNull();
         RuleFor(x => x.UserId).GreaterThan(0);

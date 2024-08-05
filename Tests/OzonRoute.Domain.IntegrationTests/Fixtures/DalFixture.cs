@@ -23,7 +23,7 @@ public class DalFixture
             }).Build();
 
 
-        host.MigrateDown(20240803);
+        ClearDatabase(host);
         host.MigrateUp();
     }
 

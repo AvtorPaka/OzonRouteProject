@@ -42,7 +42,7 @@ public class GoodsSyncHostedService : BackgroundService
         _logger.LogInformation(">>GoodsSync Host Service start processing goods | Date : {curDate}", DateTime.Now);
         using var scope = _serviceProvider.CreateAsyncScope();
         IGoodsDetachedService goodsDetachedService = scope.ServiceProvider.GetRequiredService<IGoodsDetachedService>();
-        IGoodsService goodsService = scope.ServiceProvider.GetRequiredService<IGoodsService>();
+        IStorageGoodsService goodsService = scope.ServiceProvider.GetRequiredService<IStorageGoodsService>();
 
         var goods = await goodsDetachedService.GetGoodsFromDetached(cancellationToken);
         await goodsService.UpdateGoods(goods, cancellationToken);

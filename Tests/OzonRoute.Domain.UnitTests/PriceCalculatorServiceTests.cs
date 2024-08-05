@@ -17,18 +17,18 @@ public class PriceCalculatorServiceTests
         //Arrange
         var cts = new CancellationTokenSource();
         var options = new PriceCalculatorOptions() { VolumeToPriceRatio = 1, WeightToPriceRatio = 1 };
-        var goodPriceRepositoryMock = new Mock<IGoodPriceRepository>();
+        var calculationsRepositoryMock = new Mock<ICalculationsRepository>();
 
         var cut = new PriceCalculatorService(
             options: options,
-            goodPriceRepository: goodPriceRepositoryMock.Object
+            calculationsRepository: calculationsRepositoryMock.Object
         );
 
         //Act, Assert
         await Assert.ThrowsAsync<DomainException>(async () => await cut.CalculatePrice(
-            new GoodModelsContainer(
+            new DeliveryGoodsContainer(
             UserId: 1,
-            Goods: Array.Empty<GoodModel>().ToList(),
+            Goods: Array.Empty<DeliveryGoodModel>().ToList(),
             Distance: 1000),
             cancellationToken: cts.Token));
     }
@@ -38,9 +38,9 @@ public class PriceCalculatorServiceTests
         get
         {
             yield return new object[] {
-            new GoodModelsContainer(
+            new DeliveryGoodsContainer(
                 UserId: 1,
-                Goods: new List<GoodModel>() {new GoodModel(
+                Goods: new List<DeliveryGoodModel>() {new DeliveryGoodModel(
                     Lenght: 10,
                     Width: 10,
                     Height: 10,
@@ -49,9 +49,9 @@ public class PriceCalculatorServiceTests
                 Distance: 1000), 1000};
 
             yield return new object[] {
-            new GoodModelsContainer(
+            new DeliveryGoodsContainer(
                 UserId: 1,
-                Goods: new List<GoodModel>() {new GoodModel(
+                Goods: new List<DeliveryGoodModel>() {new DeliveryGoodModel(
                     Lenght: 20,
                     Width: 20,
                     Height: 20,
@@ -63,28 +63,28 @@ public class PriceCalculatorServiceTests
 
     [Theory]
     [MemberData(nameof(CalculatePriceByVolumeMemberData))]
-    public async void CalculatePrice_WhenCalculatePriceByVolume_Succes(GoodModelsContainer modelsContainer, double expected)
+    public async void CalculatePrice_WhenCalculatePriceByVolume_Succes(DeliveryGoodsContainer modelsContainer, double expected)
     {
         //Arrange
         var cts = new CancellationTokenSource();
         var options = new PriceCalculatorOptions() { VolumeToPriceRatio = 1, WeightToPriceRatio = 1 };
-        var goodPriceRepositoryMock = new Mock<IGoodPriceRepository>(MockBehavior.Strict);
+        var calculationsRepositoryMock = new Mock<ICalculationsRepository>(MockBehavior.Strict);
         
-        goodPriceRepositoryMock.Setup(x => x.Save(It.IsAny<GoodPriceEntity>()));
+        calculationsRepositoryMock.Setup(x => x.Save(It.IsAny<CalculationEntityV1>()));
 
         var cut = new PriceCalculatorService(
             options: options,
-            goodPriceRepository: goodPriceRepositoryMock.Object
+            calculationsRepository: calculationsRepositoryMock.Object
         );
 
         //Act
         double result = await cut.CalculatePrice(
-            goodModelsContainer: modelsContainer,
+            deliveryGoodsContainer: modelsContainer,
             cancellationToken: cts.Token);
 
         //Assert
         Assert.Equal(expected, result);
-        goodPriceRepositoryMock.Verify(x => x.Save(It.IsAny<GoodPriceEntity>()));
+        calculationsRepositoryMock.Verify(x => x.Save(It.IsAny<CalculationEntityV1>()));
     }
 
     [Theory]
@@ -95,20 +95,20 @@ public class PriceCalculatorServiceTests
         //Arrange
         var cts = new CancellationTokenSource();
         var options = new PriceCalculatorOptions() { VolumeToPriceRatio = 1, WeightToPriceRatio = 1 };
-        var goodPriceRepositoryMock = new Mock<IGoodPriceRepository>(MockBehavior.Strict);
+        var calculationsRepositoryMock = new Mock<ICalculationsRepository>(MockBehavior.Strict);
 
-        goodPriceRepositoryMock.Setup(x => x.Save(It.IsAny<GoodPriceEntity>()));
+        calculationsRepositoryMock.Setup(x => x.Save(It.IsAny<CalculationEntityV1>()));
 
         var cut = new PriceCalculatorService(
             options: options,
-            goodPriceRepository: goodPriceRepositoryMock.Object
+            calculationsRepository: calculationsRepositoryMock.Object
         );
 
         //Act
         double result = await cut.CalculatePrice(
-            new GoodModelsContainer(
+            new DeliveryGoodsContainer(
             UserId: 1,
-            Goods: new List<GoodModel>() {new GoodModel(
+            Goods: new List<DeliveryGoodModel>() {new DeliveryGoodModel(
                 Lenght: 10,
                 Width: 10,
                 Height: 10,
@@ -119,7 +119,7 @@ public class PriceCalculatorServiceTests
 
         //Assert
         Assert.Equal(expected, result);
-        goodPriceRepositoryMock.Verify(x => x.Save(It.IsAny<GoodPriceEntity>()));
+        calculationsRepositoryMock.Verify(x => x.Save(It.IsAny<CalculationEntityV1>()));
     }
 
     [Fact]
@@ -128,21 +128,21 @@ public class PriceCalculatorServiceTests
         //Arrange
         var cts = new CancellationTokenSource();
         var options = new PriceCalculatorOptions() { VolumeToPriceRatio = 1, WeightToPriceRatio = 1 };
-        var goodPriceRepositoryMock = new Mock<IGoodPriceRepository>(MockBehavior.Strict);
+        var calculationsRepositoryMock = new Mock<ICalculationsRepository>(MockBehavior.Strict);
 
-        goodPriceRepositoryMock.Setup(x => x.Save(It.IsAny<GoodPriceEntity>()));
+        calculationsRepositoryMock.Setup(x => x.Save(It.IsAny<CalculationEntityV1>()));
 
-        GoodModelsContainer modelsContainer = new Fixture().Build<GoodModelsContainer>().With(x => x.Distance, 1000).Create();
+        DeliveryGoodsContainer modelsContainer = new Fixture().Build<DeliveryGoodsContainer>().With(x => x.Distance, 1000).Create();
 
         var cut = new PriceCalculatorService(
             options: options,
-            goodPriceRepository: goodPriceRepositoryMock.Object
+            calculationsRepository: calculationsRepositoryMock.Object
         );
 
         //Act and Assert
         double result = await cut.CalculatePrice(
-            goodModelsContainer: modelsContainer,
+            deliveryGoodsContainer: modelsContainer,
             cancellationToken: cts.Token);
-        goodPriceRepositoryMock.Verify(x => x.Save(It.IsAny<GoodPriceEntity>()));
+        calculationsRepositoryMock.Verify(x => x.Save(It.IsAny<CalculationEntityV1>()));
     }
 }

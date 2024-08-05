@@ -4,16 +4,16 @@ using OzonRoute.Infrastructure.Dal.Contexts;
 
 namespace OzonRoute.Infrastructure.Dal.Repositories;
 
-internal sealed class GoodPriceRepository : IGoodPriceRepository
+internal sealed class CalculationsRepository : ICalculationsRepository
 {
     private readonly DeliveryPriceContext _deliveryPriceContext;
 
-    public GoodPriceRepository(DeliveryPriceContext deliveryPriceContext)
+    public CalculationsRepository(DeliveryPriceContext deliveryPriceContext)
     {
         _deliveryPriceContext = deliveryPriceContext;
     }
 
-    public void Save(GoodPriceEntity goodPriceData)
+    public void Save(CalculationEntityV1 goodPriceData)
     {
         _deliveryPriceContext.Storage.Add(goodPriceData);
     }
@@ -23,7 +23,7 @@ internal sealed class GoodPriceRepository : IGoodPriceRepository
         _deliveryPriceContext.Storage.Clear();
     }
 
-    public async Task<IReadOnlyList<GoodPriceEntity>> QueryData(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<CalculationEntityV1>> QueryData(CancellationToken cancellationToken)
     {
         await Task.Delay(TimeSpan.FromMilliseconds(1), cancellationToken); // Fiction
         return await Task.FromResult(_deliveryPriceContext.Storage.ToList());

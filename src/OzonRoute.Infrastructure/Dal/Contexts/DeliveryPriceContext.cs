@@ -4,6 +4,6 @@ namespace OzonRoute.Infrastructure.Dal.Contexts;
 
 internal sealed class DeliveryPriceContext
 {
-    public List<GoodPriceEntity> Storage { get; init; } = new List<GoodPriceEntity>();
+    public List<CalculationEntityV1> Storage { get; init; } = new List<CalculationEntityV1>();
     public ReportEntity Report { get; init; } = new ReportEntity();
 }

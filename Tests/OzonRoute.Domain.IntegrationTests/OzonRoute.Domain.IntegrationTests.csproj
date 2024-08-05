@@ -24,6 +24,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="..\..\src\OzonRoute.Api\appsettings.json">
+      <Link>appsettings.json</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\OzonRoute.Domain\OzonRoute.Domain.csproj" />
     <ProjectReference Include="..\..\src\OzonRoute.Api\OzonRoute.Api.csproj" />
   </ItemGroup>

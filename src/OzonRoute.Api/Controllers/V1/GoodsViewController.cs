@@ -9,18 +9,18 @@ namespace OzonRoute.Api.Controllers.V1;
 
 public class V1GoodsViewController: Controller
 {
-    private readonly IGoodsService _goodsService;
+    private readonly IStorageGoodsService _storageGoodsService;
     private readonly ILogger<V1GoodsViewController> _logger;
 
-    public V1GoodsViewController([FromServices] IGoodsService goodsService, ILogger<V1GoodsViewController> logger)
+    public V1GoodsViewController([FromServices] IStorageGoodsService storageGoodsService, ILogger<V1GoodsViewController> logger)
     {
-        _goodsService = goodsService;
+        _storageGoodsService = storageGoodsService;
         _logger = logger;
     }
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        IReadOnlyList<GoodStoreModel> goodsModels = await _goodsService.GetGoodsFromData(cancellationToken);
+        IReadOnlyList<StorageGoodModel> goodsModels = await _storageGoodsService.GetGoodsFromStorage(cancellationToken);
         IReadOnlyList<GetGoodsResponse> response = await goodsModels.MapModelsToResponse();
         GoodsPageViewModel viewModel = new GoodsPageViewModel(response);
 

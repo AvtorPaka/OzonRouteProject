@@ -1,6 +1,6 @@
-namespace OzonRoute.Domain.Shared.Data.Entities;
+namespace OzonRoute.Domain.Models;
 
-public record GoodEntity(
+public record StorageGoodModel(
     string Name,
     int Id,
     int Count,

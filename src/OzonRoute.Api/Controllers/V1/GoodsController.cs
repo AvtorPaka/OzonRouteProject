@@ -11,12 +11,12 @@ namespace OzonRoute.Api.Controllers.V1;
 [Route("v1/goods")]
 public class V1GoodsController : ControllerBase
 {
-    private readonly IGoodsService _goodsService;
+    private readonly IStorageGoodsService _storageGoodsService;
     private readonly ILogger<V1GoodsController> _logger;
 
-    public V1GoodsController([FromServices] IGoodsService goodsService, ILogger<V1GoodsController> logger)
+    public V1GoodsController([FromServices] IStorageGoodsService storageGoodsService, ILogger<V1GoodsController> logger)
     {
-        _goodsService = goodsService;
+        _storageGoodsService = storageGoodsService;
         _logger = logger;
     }
 
@@ -25,7 +25,7 @@ public class V1GoodsController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<GetGoodsResponse>), 200)]
     public async Task<IActionResult> GetGoods(CancellationToken cancellationToken)
     {
-        IReadOnlyList<GoodStoreModel> goodsModels = await _goodsService.GetGoodsFromData(cancellationToken);
+        IReadOnlyList<StorageGoodModel> goodsModels = await _storageGoodsService.GetGoodsFromStorage(cancellationToken);
         IReadOnlyList<GetGoodsResponse> response = await goodsModels.MapModelsToResponse();
 
         return Ok(response);
@@ -39,7 +39,7 @@ public class V1GoodsController : ControllerBase
         [FromQuery(Name = "Id")] int id,
         CancellationToken cancellationToken)
     {
-        double finalPrice = await _goodsService.CalculateFullPrice(priceCalculatorService, id, cancellationToken);
+        double finalPrice = await _storageGoodsService.CalculateFullPrice(priceCalculatorService, id, cancellationToken);
 
         return Ok(new CalculateResponse(finalPrice));
     }

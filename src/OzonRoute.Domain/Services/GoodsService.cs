@@ -9,26 +9,26 @@ using OzonRoute.Domain.Shared.Data.Interfaces;
 
 namespace OzonRoute.Domain.Services;
 
-internal sealed class GoodsService : IGoodsService
+internal sealed class StorageGoodsService : IStorageGoodsService
 {
-    private readonly IGoodsRepository _goodsRepository;
+    private readonly IStorageGoodsRepository _storageGoodsRepository;
 
-    public GoodsService(IGoodsRepository goodsRepository)
+    public StorageGoodsService(IStorageGoodsRepository storageGoodsRepository)
     {
-        _goodsRepository = goodsRepository;
+        _storageGoodsRepository = storageGoodsRepository;
     }
 
-    public async Task<IReadOnlyList<GoodStoreModel>> GetGoodsFromData(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<StorageGoodModel>> GetGoodsFromStorage(CancellationToken cancellationToken)
     {
-        var goodEntities = await _goodsRepository.GetAllGoods();
+        var goodEntities = await _storageGoodsRepository.GetAllGoods();
         return await goodEntities.MapEntitysToModels();
     }
 
-    public async Task UpdateGoods(IEnumerable<GoodEntity> goodEntities, CancellationToken cancellationToken)
+    public async Task UpdateGoods(IEnumerable<StorageGoodEntity> goodEntities, CancellationToken cancellationToken)
     {
         foreach (var good in goodEntities)
         {
-            await _goodsRepository.AddOrUpdate(good, cancellationToken);
+            await _storageGoodsRepository.AddOrUpdate(good, cancellationToken);
         }
     }
 
@@ -50,8 +50,8 @@ internal sealed class GoodsService : IGoodsService
 
     private async Task<double> CalculateFullPriceUnsafe(IPriceCalculatorService priceCalculatorService, int id, CancellationToken cancellationToken)
     {
-        GoodEntity entity = await _goodsRepository.Get(id);
-        GoodModel goodModel = new GoodModel(
+        StorageGoodEntity entity = await _storageGoodsRepository.Get(id);
+        DeliveryGoodModel goodModel = new DeliveryGoodModel(
             Lenght: entity.Lenght,
             Width: entity.Width,
             Height: entity.Height,
@@ -60,7 +60,7 @@ internal sealed class GoodsService : IGoodsService
 
         // TODO: Do smth with UserId
         double shipPrice = await priceCalculatorService.CalculatePrice(
-            new GoodModelsContainer(
+            new DeliveryGoodsContainer(
                 UserId: int.MaxValue/2,
                 Goods: [goodModel],
                 Distance: 1000

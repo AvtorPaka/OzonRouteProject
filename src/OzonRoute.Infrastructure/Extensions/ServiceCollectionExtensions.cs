@@ -15,7 +15,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddDalInfrastucture(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<DeliveryPriceContext>();
-        services.AddSingleton<GoodsContext>();
+        services.AddSingleton<StorageGoodsContext>();
 
         services.Configure<PostgreSQLOptions>(configuration.GetSection($"DalOptions:{nameof(PostgreSQLOptions)}"));
 
@@ -26,9 +26,9 @@ public static class ServiceCollectionExtensions
     }
     public static IServiceCollection AddDalRepositories(this IServiceCollection services)
     {
-        services.AddScoped<IGoodPriceRepository, GoodPriceRepository>();
+        services.AddScoped<ICalculationsRepository , CalculationsRepository>();
         services.AddScoped<IReportsRepository, ReportsRepository>();
-        services.AddScoped<IGoodsRepository, GoodsRepository>();
+        services.AddScoped<IStorageGoodsRepository, StorageGoodsRepository>();
 
         return services;
     }

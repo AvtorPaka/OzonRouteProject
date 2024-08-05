@@ -16,10 +16,10 @@ public static class DomainServiceCollectionExtensions
 
         services.AddScoped<IPriceCalculatorService, PriceCalculatorService>(x => new PriceCalculatorService(
             options: x.GetConfigurationSnapshot<PriceCalculatorOptions>(),
-            goodPriceRepository: x.GetRequiredService<IGoodPriceRepository>()
+            calculationsRepository: x.GetRequiredService<ICalculationsRepository>()
         ));
 
-        services.AddScoped<IGoodsService, GoodsService>();
+        services.AddScoped<IStorageGoodsService, StorageGoodsService>();
         services.AddScoped<IReportsService, ReportsService>();
         
         // services.AddValidatorsFromAssemblyContaining<Validators.GetHistoryModelValidator>();

@@ -9,6 +9,6 @@ public class GetHistoryModelValidator: AbstractValidator<GetHistoryModel>
     {
         RuleFor(x => x.Take).GreaterThan(0).LessThanOrEqualTo(int.MaxValue);
         RuleFor(x => x.UserId).GreaterThan(0).LessThanOrEqualTo(int.MaxValue);
-        RuleFor(x => x.Skip).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.Skip).GreaterThanOrEqualTo(0).LessThanOrEqualTo(int.MaxValue);
     }
 }

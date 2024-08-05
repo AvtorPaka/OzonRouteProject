@@ -15,23 +15,23 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
 {
     private readonly double _volumeToPriceRatio;
     private readonly double _weightToPriceRatio;
-    private readonly IGoodPriceRepository _goodPriceRepository;
+    private readonly ICalculationsRepository _calculationsRepository;
 
     public PriceCalculatorService(
         PriceCalculatorOptions options,
-        IGoodPriceRepository goodPriceRepository)
+        ICalculationsRepository calculationsRepository)
     {
         _volumeToPriceRatio = options.VolumeToPriceRatio;
         _weightToPriceRatio = options.WeightToPriceRatio;
-        _goodPriceRepository = goodPriceRepository;
+        _calculationsRepository = calculationsRepository;
     }
 
     //TODO: Change QUERYING Data
-    public async Task<double> CalculatePrice(GoodModelsContainer goodModelsContainer, CancellationToken cancellationToken)
+    public async Task<double> CalculatePrice(DeliveryGoodsContainer deliveryGoodsContainer, CancellationToken cancellationToken)
     {   
         try
         {
-            return await CalculatePriceUnsafe(goodModelsContainer, cancellationToken);
+            return await CalculatePriceUnsafe(deliveryGoodsContainer, cancellationToken);
         }
         catch (ValidationException ex)
         {
@@ -40,24 +40,28 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
     }
 
     //TODO: Change QUERYING Data
-    private async Task<double> CalculatePriceUnsafe(GoodModelsContainer goodModelsContainer, CancellationToken cancellationToken)
+    private async Task<double> CalculatePriceUnsafe(DeliveryGoodsContainer deliveryGoodsContainer, CancellationToken cancellationToken)
     {
-        var validator = new GoodModelsContainerValidator();
-        await validator.ValidateAndThrowAsync(goodModelsContainer, cancellationToken);
+        var validator = new DeliveryGoodsContainerValidator();
+        await validator.ValidateAndThrowAsync(deliveryGoodsContainer, cancellationToken);
 
-        double finalPrice = CalculatePriceForOneMetr(goodModelsContainer.Goods , out double summaryVolume, out double summaryWeight) * goodModelsContainer.Distance;
+        double finalPrice = CalculatePriceForOneMetr(deliveryGoodsContainer.Goods , out double summaryVolume, out double summaryWeight) * deliveryGoodsContainer.Distance;
 
-        _goodPriceRepository.Save(new GoodPriceEntity(
-            Price: finalPrice,
-            Volume: summaryVolume, // In cm^3
-            Weight: summaryWeight,  // In gramms
-            Distance: goodModelsContainer.Distance, // In metrs
-            At: DateTime.UtcNow));
+        _calculationsRepository.Save(new CalculationEntityV1(
+                id: int.MaxValue/2,
+                userId: deliveryGoodsContainer.UserId,
+                goodIds: [],
+                totalVolume: summaryVolume,
+                totalWeight: summaryWeight,
+                price: finalPrice,
+                distance: deliveryGoodsContainer.Distance,
+                at: DateTime.UtcNow
+            ));
 
         return finalPrice;
     }
 
-    private double CalculatePriceForOneMetr(IReadOnlyList<GoodModel> goods, out double summaryVolume, out double summaryWeight)
+    private double CalculatePriceForOneMetr(IReadOnlyList<DeliveryGoodModel> goods, out double summaryVolume, out double summaryWeight)
     {
         double volumePrice = CalculatePriceByVolume(goods, out summaryVolume);
         double weightPrice = CalculatePriceByWeight(goods, out summaryWeight);
@@ -66,7 +70,7 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         return priceForOneMetr;
     }
 
-    private double CalculatePriceByVolume(IReadOnlyList<GoodModel> goods, out double summaryVolume)
+    private double CalculatePriceByVolume(IReadOnlyList<DeliveryGoodModel> goods, out double summaryVolume)
     {
         summaryVolume = goods.Sum(g => g.Lenght * g.Width * g.Height);
         double volumePrice = summaryVolume * _volumeToPriceRatio;
@@ -74,7 +78,7 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         return volumePrice;
     }
 
-    private double CalculatePriceByWeight(IReadOnlyList<GoodModel> goods, out double summaryWeight)
+    private double CalculatePriceByWeight(IReadOnlyList<DeliveryGoodModel> goods, out double summaryWeight)
     {
         summaryWeight = goods.Sum(g => g.Weight) * 1000.0d;
         double weightPrice = summaryWeight * _weightToPriceRatio / 1000.0d;
@@ -83,7 +87,7 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
     }
 
     //TODO: Change impementation
-    public async Task<IReadOnlyList<CalculateLogModel>> QueryLog(GetHistoryModel model, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<CalculationLogModel>> QueryLog(GetHistoryModel model, CancellationToken cancellationToken)
     {
         try
         {
@@ -97,19 +101,19 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
 
 
     //TODO: Change impementation
-    private async Task<IReadOnlyList<CalculateLogModel>> QueryLogUnsafe(GetHistoryModel model, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<CalculationLogModel>> QueryLogUnsafe(GetHistoryModel model, CancellationToken cancellationToken)
     {
         var validator = new GetHistoryModelValidator();
         await validator.ValidateAndThrowAsync(model, cancellationToken);
 
-        IReadOnlyList<GoodPriceEntity> log = await _goodPriceRepository.QueryData(cancellationToken);
-        IReadOnlyList<CalculateLogModel> processedLog = await log.OrderByDescending(g => g.At).Take(model.Take).MapEntitiesToModels();
+        IReadOnlyList<CalculationEntityV1> log = await _calculationsRepository.QueryData(cancellationToken);
+        IReadOnlyList<CalculationLogModel> processedLog = await log.OrderByDescending(g => g.At).Take(model.Take).MapEntitiesToModels();
 
         return processedLog;
     }
 
     public void ClearLog()
     {
-        _goodPriceRepository.ClearData();
+        _calculationsRepository.ClearData();
     }
 }
