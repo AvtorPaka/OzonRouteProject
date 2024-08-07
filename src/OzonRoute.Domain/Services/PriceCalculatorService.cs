@@ -12,7 +12,7 @@ using OzonRoute.Domain.Exceptions.Infrastructure;
 
 namespace OzonRoute.Domain.Services;
 
-internal sealed class PriceCalculatorService : IPriceCalculatorService
+internal class PriceCalculatorService : IPriceCalculatorService
 {
     private readonly double _volumeToPriceRatio;
     private readonly double _weightToPriceRatio;
@@ -53,24 +53,41 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
 
         double finalPrice = CalculatePriceForOneMetr(deliveryGoodsContainer.Goods , out double summaryVolume, out double summaryWeight) * deliveryGoodsContainer.Distance;
 
+        await SaveCalculationsData(
+            saveModel: new SaveCalculationModel(
+                GoodsContainer: deliveryGoodsContainer,
+                TotalVolume: summaryVolume,
+                TotalWeight: summaryWeight,
+                Price: (decimal)finalPrice,
+                At: DateTime.UtcNow
+            ),
+            token: cancellationToken
+        );
+
+        return finalPrice;
+    }
+
+    private async Task SaveCalculationsData(SaveCalculationModel saveModel, CancellationToken token)
+    {   
+        using var transaction = _calculationsRepository.CreateTransactionScope();
+
         long[] calculationGoodsIds = await _calculationGoodsRepository.Add(
-            deliveryGoodsContainer.Goods.MapModelsToEntities(deliveryGoodsContainer.UserId) ,
-            cancellationToken);
+            saveModel.GoodsContainer.Goods.MapModelsToEntities(saveModel.GoodsContainer.UserId) ,
+            token);
 
         await _calculationsRepository.Add(
             [new CalculationEntityV1{
-                Id = -1, //Fiction cause DB creates PK id's automatically
-                UserId = deliveryGoodsContainer.UserId,
+                UserId = saveModel.GoodsContainer.UserId,
                 GoodIds = calculationGoodsIds,
-                TotalVolume = summaryVolume,
-                TotalWeight = summaryWeight,
-                Price = (decimal)finalPrice,
-                Distance = deliveryGoodsContainer.Distance,
-                At = DateTime.UtcNow
+                TotalVolume = saveModel.TotalVolume,
+                TotalWeight = saveModel.TotalWeight,
+                Price = saveModel.Price,
+                Distance = saveModel.GoodsContainer.Distance,
+                At = saveModel.At
             }],
-            cancellationToken: cancellationToken);
+            cancellationToken: token);
 
-        return finalPrice;
+        transaction.Complete();
     }
 
     private double CalculatePriceForOneMetr(IReadOnlyList<DeliveryGoodModel> goods, out double summaryVolume, out double summaryWeight)
