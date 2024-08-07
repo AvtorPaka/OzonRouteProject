@@ -7,11 +7,14 @@ public static class CalculationLogModelExtensions
     public static CalculationLogModel MapEntityToModel(this CalculationEntityV1 calculationEntityV1)
     {
         return new CalculationLogModel(
-            At: calculationEntityV1.At,
-            Volume: calculationEntityV1.TotalVolume,
-            Weight: calculationEntityV1.TotalWeight / gramsToKgRatio,
+            Id: calculationEntityV1.Id,
+            UserId: calculationEntityV1.UserId,
+            GoodsIds: calculationEntityV1.GoodIds,
+            TotalVolume: calculationEntityV1.TotalVolume,
+            TotalWeight: calculationEntityV1.TotalWeight / gramsToKgRatio,
             Price: calculationEntityV1.Price,
-            Distance: calculationEntityV1.Distance
+            Distance: calculationEntityV1.Distance,
+            At: calculationEntityV1.At
         );
     }
 

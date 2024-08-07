@@ -7,7 +7,7 @@ public class InitSchema : Migration
 {
     public override void Up()
     {
-        Create.Table("DeliveryGoods")
+        Create.Table("delivery_goods")
             .WithColumn("id").AsInt64().PrimaryKey("goods_pk").Identity()
             .WithColumn("user_id").AsInt64().NotNullable()
             .WithColumn("width").AsDouble().NotNullable()
@@ -15,7 +15,7 @@ public class InitSchema : Migration
             .WithColumn("length").AsDouble().NotNullable()
             .WithColumn("weight").AsDouble().NotNullable();
 
-        Create.Table("Calculations")
+        Create.Table("calculations")
             .WithColumn("id").AsInt64().PrimaryKey("calculations_pk").Identity()
             .WithColumn("user_id").AsInt64().NotNullable()
             .WithColumn("good_ids").AsCustom("bigint[]").NotNullable() //Ugly af, NT rework
@@ -26,17 +26,17 @@ public class InitSchema : Migration
             .WithColumn("at").AsDateTimeOffset().NotNullable();
 
         Create.Index("delivery_goods_user_id_index")
-            .OnTable("DeliveryGoods")
+            .OnTable("delivery_goods")
             .OnColumn("user_id");
 
         Create.Index("calculations_user_id_index")
-            .OnTable("Calculations")
+            .OnTable("calculations")
             .OnColumn("user_id");
     }
     public override void Down()
     {
-        Delete.Table("DeliveryGoods");
-        Delete.Table("Calculations");
+        Delete.Table("delivery_goods");
+        Delete.Table("calculations");
     }
 
 }

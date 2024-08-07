@@ -65,8 +65,8 @@ public sealed class Startup
         {
             endpoints.MapControllers();
             endpoints.MapControllerRoute(
-                name: "v1/goods/veiew",
-                pattern: "v1/goods/view",
+                name: "v1/storage/goods/view",
+                pattern: "v1/storage/goods/view",
                 defaults: new
                 {
                     Controller = "V1GoodsView",

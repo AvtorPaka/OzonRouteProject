@@ -51,7 +51,7 @@ public class V1DeliveryPriceController : ControllerBase
                 Take: request.Take,
                 Skip: request.Skip
             ),
-            cancellationToken);
+            cancellationToken: cancellationToken);
         IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();
 
         return Ok(response);

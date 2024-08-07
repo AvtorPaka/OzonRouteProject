@@ -1,31 +1,77 @@
+using Dapper;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using OzonRoute.Domain.Shared.Data.Entities;
 using OzonRoute.Domain.Shared.Data.Interfaces;
-using OzonRoute.Infrastructure.Dal.Contexts;
+using OzonRoute.Domain.Shared.Data.Models;
+using OzonRoute.Infrastructure.Dal.Infrastructure;
 
 namespace OzonRoute.Infrastructure.Dal.Repositories;
 
-internal sealed class CalculationsRepository : ICalculationsRepository
+internal sealed class CalculationsRepository : BaseRepository, ICalculationsRepository
 {
-    private readonly DeliveryPriceContext _deliveryPriceContext;
-
-    public CalculationsRepository(DeliveryPriceContext deliveryPriceContext)
+    public CalculationsRepository([FromKeyedServices(DatabaseType.CalculationsDb)] NpgsqlDataSource dataSource) : base(dataSource)
     {
-        _deliveryPriceContext = deliveryPriceContext;
     }
 
-    public void Save(CalculationEntityV1 goodPriceData)
+    public async Task<long[]> Add(CalculationEntityV1[] calculations, CancellationToken cancellationToken)
     {
-        _deliveryPriceContext.Storage.Add(goodPriceData);
+        const string sqlQuery = @"
+insert into calculations (user_id, good_ids, total_volume, total_weight, price, distance, at)
+    select user_id, good_ids, total_volume, total_weight, price, distance, at
+    from UNNEST(@Calculations)
+    returning id;
+";
+        await using NpgsqlConnection connection = await GetAndOpenConnectionAsync(cancellationToken);
+
+        var sqlQueryParams = new
+        {
+            Calculations = calculations
+        };
+
+        var calculationsIds = await connection.QueryAsync<long>(
+            new CommandDefinition(
+                commandText: sqlQuery,
+                parameters: sqlQueryParams,
+                cancellationToken: cancellationToken
+            )
+        );
+
+        return calculationsIds.ToArray();
+    }
+
+    public async Task<IReadOnlyList<CalculationEntityV1>> Query(CalculationHistoryQueryModel model, CancellationToken cancellationToken)
+    {
+        const string sqlQuery = @"
+select id, user_id, good_ids, total_volume, total_weight, price, distance, at
+from calculations
+where user_id = @UserId
+order by at desc
+limit @Limit offset @Offset;";
+
+        await using NpgsqlConnection connection = await GetAndOpenConnectionAsync(cancellationToken);
+
+        var sqlQueryParams = new
+        {
+            UserId = model.UserID,
+            Limit = model.Limit,
+            Offset = model.Offset
+        };
+
+        var calculations = await connection.QueryAsync<CalculationEntityV1>(
+            new CommandDefinition(
+                commandText: sqlQuery,
+                parameters: sqlQueryParams,
+                cancellationToken: cancellationToken
+            )
+        );
+
+        return calculations.ToList();
     }
 
     public void ClearData()
     {
-        _deliveryPriceContext.Storage.Clear();
+        throw new NotImplementedException();
     }
 
-    public async Task<IReadOnlyList<CalculationEntityV1>> QueryData(CancellationToken cancellationToken)
-    {
-        await Task.Delay(TimeSpan.FromMilliseconds(1), cancellationToken); // Fiction
-        return await Task.FromResult(_deliveryPriceContext.Storage.ToList());
-    }
 }

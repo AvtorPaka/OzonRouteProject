@@ -8,13 +8,13 @@ using OzonRoute.Domain.Shared.Data.Entities;
 namespace OzonRoute.Api.Controllers.V1;
 
 [ApiController]
-[Route("v1/goods")]
-public class V1GoodsController : ControllerBase
+[Route("v1/storage/goods")]
+public class V1StorageGoodsController : ControllerBase
 {
     private readonly IStorageGoodsService _storageGoodsService;
-    private readonly ILogger<V1GoodsController> _logger;
+    private readonly ILogger<V1StorageGoodsController> _logger;
 
-    public V1GoodsController([FromServices] IStorageGoodsService storageGoodsService, ILogger<V1GoodsController> logger)
+    public V1StorageGoodsController([FromServices] IStorageGoodsService storageGoodsService, ILogger<V1StorageGoodsController> logger)
     {
         _storageGoodsService = storageGoodsService;
         _logger = logger;

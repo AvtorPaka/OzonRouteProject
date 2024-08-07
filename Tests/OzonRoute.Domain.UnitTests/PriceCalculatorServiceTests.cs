@@ -17,11 +17,13 @@ public class PriceCalculatorServiceTests
         //Arrange
         var cts = new CancellationTokenSource();
         var options = new PriceCalculatorOptions() { VolumeToPriceRatio = 1, WeightToPriceRatio = 1 };
-        var calculationsRepositoryMock = new Mock<ICalculationsRepository>();
+        var calculationsRepositoryMock = new Mock<ICalculationsRepository>(MockBehavior.Strict);
+        var calculationGoodsRepositoryMock = new Mock<ICalculationGoodsRepository>(MockBehavior.Strict);
 
         var cut = new PriceCalculatorService(
             options: options,
-            calculationsRepository: calculationsRepositoryMock.Object
+            calculationsRepository: calculationsRepositoryMock.Object,
+            calculationGoodsRepository: calculationGoodsRepositoryMock.Object
         );
 
         //Act, Assert
@@ -69,12 +71,24 @@ public class PriceCalculatorServiceTests
         var cts = new CancellationTokenSource();
         var options = new PriceCalculatorOptions() { VolumeToPriceRatio = 1, WeightToPriceRatio = 1 };
         var calculationsRepositoryMock = new Mock<ICalculationsRepository>(MockBehavior.Strict);
+        var calculationGoodsRepositoryMock = new Mock<ICalculationGoodsRepository>(MockBehavior.Strict);
         
-        calculationsRepositoryMock.Setup(x => x.Save(It.IsAny<CalculationEntityV1>()));
+        calculationsRepositoryMock.Setup(x => 
+        x.Add(
+            It.IsAny<CalculationEntityV1[]>(),
+            cts.Token
+            )).ReturnsAsync(() => []);
+        
+        calculationGoodsRepositoryMock.Setup(x =>
+        x.Add(
+            It.IsAny<CalculationGoodEntityV1[]>(),
+            cts.Token
+        )).ReturnsAsync(() => []);
 
         var cut = new PriceCalculatorService(
             options: options,
-            calculationsRepository: calculationsRepositoryMock.Object
+            calculationsRepository: calculationsRepositoryMock.Object,
+            calculationGoodsRepository: calculationGoodsRepositoryMock.Object
         );
 
         //Act
@@ -84,7 +98,8 @@ public class PriceCalculatorServiceTests
 
         //Assert
         Assert.Equal(expected, result);
-        calculationsRepositoryMock.Verify(x => x.Save(It.IsAny<CalculationEntityV1>()));
+        calculationsRepositoryMock.Verify(x => x.Add(It.IsAny<CalculationEntityV1[]>(), cts.Token));
+        calculationGoodsRepositoryMock.Verify(x => x.Add(It.IsAny<CalculationGoodEntityV1[]>(), cts.Token));
     }
 
     [Theory]
@@ -96,12 +111,24 @@ public class PriceCalculatorServiceTests
         var cts = new CancellationTokenSource();
         var options = new PriceCalculatorOptions() { VolumeToPriceRatio = 1, WeightToPriceRatio = 1 };
         var calculationsRepositoryMock = new Mock<ICalculationsRepository>(MockBehavior.Strict);
+        var calculationGoodsRepositoryMock = new Mock<ICalculationGoodsRepository>(MockBehavior.Strict);
 
-        calculationsRepositoryMock.Setup(x => x.Save(It.IsAny<CalculationEntityV1>()));
+        calculationsRepositoryMock.Setup(x => 
+        x.Add(
+            It.IsAny<CalculationEntityV1[]>(),
+            cts.Token
+        )).ReturnsAsync(() => []);
+
+        calculationGoodsRepositoryMock.Setup(x =>
+        x.Add(
+            It.IsAny<CalculationGoodEntityV1[]>(),
+            cts.Token
+        )).ReturnsAsync(() => []);
 
         var cut = new PriceCalculatorService(
             options: options,
-            calculationsRepository: calculationsRepositoryMock.Object
+            calculationsRepository: calculationsRepositoryMock.Object,
+            calculationGoodsRepository: calculationGoodsRepositoryMock.Object
         );
 
         //Act
@@ -119,7 +146,8 @@ public class PriceCalculatorServiceTests
 
         //Assert
         Assert.Equal(expected, result);
-        calculationsRepositoryMock.Verify(x => x.Save(It.IsAny<CalculationEntityV1>()));
+        calculationsRepositoryMock.Verify(x => x.Add(It.IsAny<CalculationEntityV1[]>(), cts.Token));
+        calculationGoodsRepositoryMock.Verify(x => x.Add(It.IsAny<CalculationGoodEntityV1[]>(), cts.Token));
     }
 
     [Fact]
@@ -129,20 +157,33 @@ public class PriceCalculatorServiceTests
         var cts = new CancellationTokenSource();
         var options = new PriceCalculatorOptions() { VolumeToPriceRatio = 1, WeightToPriceRatio = 1 };
         var calculationsRepositoryMock = new Mock<ICalculationsRepository>(MockBehavior.Strict);
+        var calculationGoodsRepositoryMock = new Mock<ICalculationGoodsRepository>(MockBehavior.Strict);
 
-        calculationsRepositoryMock.Setup(x => x.Save(It.IsAny<CalculationEntityV1>()));
+        calculationsRepositoryMock.Setup(x => 
+        x.Add(
+            It.IsAny<CalculationEntityV1[]>(),
+            cts.Token
+            )).ReturnsAsync(() => []);
+
+        calculationGoodsRepositoryMock.Setup(x =>
+        x.Add(
+            It.IsAny<CalculationGoodEntityV1[]>(),
+            cts.Token
+        )).ReturnsAsync(() => []);
 
         DeliveryGoodsContainer modelsContainer = new Fixture().Build<DeliveryGoodsContainer>().With(x => x.Distance, 1000).Create();
 
         var cut = new PriceCalculatorService(
             options: options,
-            calculationsRepository: calculationsRepositoryMock.Object
+            calculationsRepository: calculationsRepositoryMock.Object,
+            calculationGoodsRepository: calculationGoodsRepositoryMock.Object
         );
 
         //Act and Assert
         double result = await cut.CalculatePrice(
             deliveryGoodsContainer: modelsContainer,
             cancellationToken: cts.Token);
-        calculationsRepositoryMock.Verify(x => x.Save(It.IsAny<CalculationEntityV1>()));
+        calculationsRepositoryMock.Verify(x => x.Add(It.IsAny<CalculationEntityV1[]>(), cts.Token));
+        calculationGoodsRepositoryMock.Verify(x => x.Add(It.IsAny<CalculationGoodEntityV1[]>(), cts.Token));
     }
 }

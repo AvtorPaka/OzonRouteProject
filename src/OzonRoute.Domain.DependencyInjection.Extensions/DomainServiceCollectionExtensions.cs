@@ -16,12 +16,14 @@ public static class DomainServiceCollectionExtensions
 
         services.AddScoped<IPriceCalculatorService, PriceCalculatorService>(x => new PriceCalculatorService(
             options: x.GetConfigurationSnapshot<PriceCalculatorOptions>(),
-            calculationsRepository: x.GetRequiredService<ICalculationsRepository>()
+            calculationsRepository: x.GetRequiredService<ICalculationsRepository>(),
+            calculationGoodsRepository: x.GetRequiredService<ICalculationGoodsRepository>()
         ));
 
         services.AddScoped<IStorageGoodsService, StorageGoodsService>();
         services.AddScoped<IReportsService, ReportsService>();
         
+        //Dont have globaly enabled ValidateAndThrowAsync so unusable, or i didn't found it
         // services.AddValidatorsFromAssemblyContaining<Validators.GetHistoryModelValidator>();
         // services.AddFluentValidationAutoValidation();
 

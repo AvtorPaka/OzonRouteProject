@@ -9,7 +9,11 @@ public static class GetHistoryResponseExtensions
     {
         return new GetHistoryResponse(
             At: calculationLogModel.At,
-            Cargo: new CargoResponse(calculationLogModel.Volume * cm3ToMm3Ratio),
+            Id: calculationLogModel.Id,
+            UserId: calculationLogModel.UserId,
+            Cargo: new CargoResponse(
+                Volume: calculationLogModel.TotalVolume * cm3ToMm3Ratio,
+                GoodsIds: calculationLogModel.GoodsIds),
             Price: calculationLogModel.Price
         );
     }

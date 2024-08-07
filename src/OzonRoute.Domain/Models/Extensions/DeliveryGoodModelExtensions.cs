@@ -8,4 +8,21 @@ public static class DeliveryGoodModelExtensions
     {
         return goodModel.Lenght * goodModel.Width * goodModel.Height / cm3ToM3Ratio;
     }
+
+    public static CalculationGoodEntityV1 MapModelToEntity(this DeliveryGoodModel deliveryGoodModel, long userId)
+    {
+        return new CalculationGoodEntityV1{
+            Id = -1,
+            UserId = userId,
+            Width = deliveryGoodModel.Width,
+            Height = deliveryGoodModel.Height,
+            Length =  deliveryGoodModel.Lenght,
+            Weight = deliveryGoodModel.Weight
+        };
+    }
+
+    public static CalculationGoodEntityV1[] MapModelsToEntities(this IEnumerable<DeliveryGoodModel> deliveryGoodModels, long user_id)
+    {
+        return deliveryGoodModels.Select(x => x.MapModelToEntity(user_id)).ToArray();
+    }
 }

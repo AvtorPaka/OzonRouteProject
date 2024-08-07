@@ -1,7 +1,9 @@
 namespace OzonRoute.Api.Responses.V2;
 
 public record GetHistoryResponse (
-    DateTime At,
+    long Id,
+    long UserId,
     CargoResponse Cargo,
-    double Price = 0.0
+    double Price,
+    DateTimeOffset At
 ) {}

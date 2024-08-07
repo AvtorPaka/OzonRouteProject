@@ -8,6 +8,7 @@ using OzonRoute.Domain.Validators;
 using FluentValidation;
 using OzonRoute.Domain.Exceptions;
 using OzonRoute.Domain.Exceptions.Domain;
+using OzonRoute.Domain.Exceptions.Infrastructure;
 
 namespace OzonRoute.Domain.Services;
 
@@ -16,17 +17,19 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
     private readonly double _volumeToPriceRatio;
     private readonly double _weightToPriceRatio;
     private readonly ICalculationsRepository _calculationsRepository;
+    private readonly ICalculationGoodsRepository  _calculationGoodsRepository;
 
     public PriceCalculatorService(
         PriceCalculatorOptions options,
-        ICalculationsRepository calculationsRepository)
+        ICalculationsRepository calculationsRepository,
+        ICalculationGoodsRepository calculationGoodsRepository)
     {
         _volumeToPriceRatio = options.VolumeToPriceRatio;
         _weightToPriceRatio = options.WeightToPriceRatio;
         _calculationsRepository = calculationsRepository;
+        _calculationGoodsRepository = calculationGoodsRepository;
     }
 
-    //TODO: Change QUERYING Data
     public async Task<double> CalculatePrice(DeliveryGoodsContainer deliveryGoodsContainer, CancellationToken cancellationToken)
     {   
         try
@@ -37,9 +40,12 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         {
             throw new DomainException("Invalid input data", ex);
         }
+        catch (EntityNotFoundException ex)
+        {
+            throw new DomainException("Invalid input data", ex);
+        }
     }
 
-    //TODO: Change QUERYING Data
     private async Task<double> CalculatePriceUnsafe(DeliveryGoodsContainer deliveryGoodsContainer, CancellationToken cancellationToken)
     {
         var validator = new DeliveryGoodsContainerValidator();
@@ -47,16 +53,22 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
 
         double finalPrice = CalculatePriceForOneMetr(deliveryGoodsContainer.Goods , out double summaryVolume, out double summaryWeight) * deliveryGoodsContainer.Distance;
 
-        _calculationsRepository.Save(new CalculationEntityV1(
-                id: int.MaxValue/2,
-                userId: deliveryGoodsContainer.UserId,
-                goodIds: [],
-                totalVolume: summaryVolume,
-                totalWeight: summaryWeight,
-                price: finalPrice,
-                distance: deliveryGoodsContainer.Distance,
-                at: DateTime.UtcNow
-            ));
+        long[] calculationGoodsIds = await _calculationGoodsRepository.Add(
+            deliveryGoodsContainer.Goods.MapModelsToEntities(deliveryGoodsContainer.UserId) ,
+            cancellationToken);
+
+        await _calculationsRepository.Add(
+            [new CalculationEntityV1{
+                Id = -1, //Fiction cause DB creates PK id's automatically
+                UserId = deliveryGoodsContainer.UserId,
+                GoodIds = calculationGoodsIds,
+                TotalVolume = summaryVolume,
+                TotalWeight = summaryWeight,
+                Price = finalPrice,
+                Distance = deliveryGoodsContainer.Distance,
+                At = DateTime.UtcNow
+            }],
+            cancellationToken: cancellationToken);
 
         return finalPrice;
     }
@@ -86,7 +98,6 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         return weightPrice;
     }
 
-    //TODO: Change impementation
     public async Task<IReadOnlyList<CalculationLogModel>> QueryLog(GetHistoryModel model, CancellationToken cancellationToken)
     {
         try
@@ -100,14 +111,13 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
     }
 
 
-    //TODO: Change impementation
     private async Task<IReadOnlyList<CalculationLogModel>> QueryLogUnsafe(GetHistoryModel model, CancellationToken cancellationToken)
     {
         var validator = new GetHistoryModelValidator();
         await validator.ValidateAndThrowAsync(model, cancellationToken);
 
-        IReadOnlyList<CalculationEntityV1> log = await _calculationsRepository.QueryData(cancellationToken);
-        IReadOnlyList<CalculationLogModel> processedLog = await log.OrderByDescending(g => g.At).Take(model.Take).MapEntitiesToModels();
+        IReadOnlyList<CalculationEntityV1> log = await _calculationsRepository.Query(model.MapModelToDalModel(), cancellationToken);
+        IReadOnlyList<CalculationLogModel> processedLog = await log.MapEntitiesToModels();
 
         return processedLog;
     }

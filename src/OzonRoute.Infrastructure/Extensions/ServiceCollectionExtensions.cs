@@ -17,8 +17,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<DeliveryPriceContext>();
         services.AddSingleton<StorageGoodsContext>();
 
-        services.Configure<PostgreSQLOptions>(configuration.GetSection($"DalOptions:{nameof(PostgreSQLOptions)}"));
+        var postgreSqlSection = configuration.GetSection($"DalOptions:{nameof(PostgreSQLOptions)}");
+        services.Configure<PostgreSQLOptions>(postgreSqlSection);
 
+        Postgres.AddDataSource(services, postgreSqlSection.GetValue<string>("ConnectionString") ?? throw new ArgumentNullException("PgSQL connection string is missing"));
         Postgres.MapCompositeTypes();
         Postgres.AddMigrations(services);
         
@@ -26,9 +28,11 @@ public static class ServiceCollectionExtensions
     }
     public static IServiceCollection AddDalRepositories(this IServiceCollection services)
     {
-        services.AddScoped<ICalculationsRepository , CalculationsRepository>();
         services.AddScoped<IReportsRepository, ReportsRepository>();
         services.AddScoped<IStorageGoodsRepository, StorageGoodsRepository>();
+
+        services.AddScoped<ICalculationsRepository , CalculationsRepository>();
+        services.AddScoped<ICalculationGoodsRepository, CalculationGoodsRepository>();
 
         return services;
     }

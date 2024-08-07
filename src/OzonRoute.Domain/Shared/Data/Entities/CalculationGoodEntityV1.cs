@@ -1,12 +1,13 @@
 namespace OzonRoute.Domain.Shared.Data.Entities;
 
-public record CalculationGoodEntityV1(
-    long Id,
-    long UserId,
+public record CalculationGoodEntityV1
+{
+    public long Id {get; init;}
+    public long UserId{get; init;}
     //In cm
-    double Width,
-    double Height,
-    double Length,
+    public double Width {get; init;}
+    public double Height {get;init;}
+    public double Length {get; init;}
     //In kg
-    double Weight
-) {}
+    public double Weight {get; init;}
+}
