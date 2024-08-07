@@ -5,6 +5,7 @@ using OzonRoute.Infrastructure.Dal.Contexts;
 
 namespace OzonRoute.Infrastructure.Dal.Repositories;
 
+//TODO: Change all of this
 internal sealed class StorageGoodsRepository : IStorageGoodsRepository
 {
     private readonly StorageGoodsContext _storageGoodsContext;

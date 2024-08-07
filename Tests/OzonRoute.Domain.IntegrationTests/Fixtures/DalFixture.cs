@@ -2,12 +2,16 @@ using FluentMigrator.Runner;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using OzonRoute.Domain.Shared.Data.Interfaces;
 using OzonRoute.Infrastructure.Extensions;
 
 namespace OzonRoute.Domain.IntegrationTests.Fixtures;
 
-public class DalFixture
+public sealed class DalFixture
 {
+    public ICalculationsRepository CalculationsRepository {get;}
+    public ICalculationGoodsRepository CalculationGoodsRepository {get;}
+
     public DalFixture()
     {   
         var config = new ConfigurationBuilder()
@@ -25,6 +29,10 @@ public class DalFixture
 
         ClearDatabase(host);
         host.MigrateUp();
+
+        var services = host.Services;
+        CalculationsRepository = services.GetRequiredService<ICalculationsRepository>();
+        CalculationGoodsRepository = services.GetRequiredService<ICalculationGoodsRepository>();
     }
 
     private static void ClearDatabase(IHost host)

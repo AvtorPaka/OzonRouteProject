@@ -1,10 +1,8 @@
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Npgsql;
 using OzonRoute.Domain.Shared.Data.Entities;
 using OzonRoute.Domain.Shared.Data.Interfaces;
-using OzonRoute.Infrastructure.Dal.Configuration;
 using OzonRoute.Infrastructure.Dal.Infrastructure;
 
 namespace OzonRoute.Infrastructure.Dal.Repositories;

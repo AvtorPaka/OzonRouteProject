@@ -5,6 +5,6 @@ public record GetHistoryResponse (
     long UserId,
     CargoResponse Cargo,
     double Distance,
-    double Price,
+    decimal Price,
     DateTimeOffset At
 ) {}

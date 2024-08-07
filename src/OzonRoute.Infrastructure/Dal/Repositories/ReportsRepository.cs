@@ -4,6 +4,7 @@ using OzonRoute.Infrastructure.Dal.Contexts;
 
 namespace OzonRoute.Infrastructure.Dal.Repositories;
 
+//TODO: Change all of this
 internal sealed class ReportsRepository : IReportsRepository
 {
     private readonly DeliveryPriceContext _deliveryPriceContext;

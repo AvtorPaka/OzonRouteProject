@@ -4,6 +4,6 @@ public record GetHistoryResponse (
     long Id,
     long UserId,
     CargoResponse Cargo,
-    double Price,
+    decimal Price,
     DateTimeOffset At
 ) {}

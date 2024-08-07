@@ -1,5 +1,4 @@
 using AutoFixture;
-using Castle.Components.DictionaryAdapter.Xml;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using OzonRoute.Api.Controllers.V1;

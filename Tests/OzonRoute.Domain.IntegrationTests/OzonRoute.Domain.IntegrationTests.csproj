@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="AutoFixture" Version="4.18.1" />
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.7" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Moq" Version="4.20.70" />
@@ -33,6 +34,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\OzonRoute.Domain\OzonRoute.Domain.csproj" />
     <ProjectReference Include="..\..\src\OzonRoute.Api\OzonRoute.Api.csproj" />
+    <ProjectReference Include="..\OzonRoute.Tests.Infrastructure\OzonRoute.Tests.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -64,7 +64,7 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
                 GoodIds = calculationGoodsIds,
                 TotalVolume = summaryVolume,
                 TotalWeight = summaryWeight,
-                Price = finalPrice,
+                Price = (decimal)finalPrice,
                 Distance = deliveryGoodsContainer.Distance,
                 At = DateTime.UtcNow
             }],
