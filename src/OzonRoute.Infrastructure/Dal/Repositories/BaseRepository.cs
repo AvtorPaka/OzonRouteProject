@@ -29,7 +29,7 @@ public abstract class BaseRepository : IDbRepository
             transactionOptions: new TransactionOptions
             {
                 IsolationLevel = isolationLevel,
-                Timeout = TimeSpan.FromSeconds(5)
+                Timeout = TimeSpan.FromSeconds(100) //Dont forget to change
             },
             asyncFlowOption: TransactionScopeAsyncFlowOption.Enabled
         );

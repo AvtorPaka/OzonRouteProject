@@ -164,6 +164,23 @@ internal class PriceCalculatorService : IPriceCalculatorService
         var validator = new ClearHistoryModelValidator();
         await validator.ValidateAndThrowAsync(model, cancellationToken);
 
-        throw new NotImplementedException();
+        using var transaction = _calculationsRepository.CreateTransactionScope();
+
+        long[] calculationGoodIds = await _calculationsRepository.Clear(
+            userId: model.UserId,
+            calculationIds: model.CalculationIds.ToArray(),
+            cancellationToken: cancellationToken
+        );
+
+        if (calculationGoodIds.Length != 0)
+        {
+            await _calculationGoodsRepository.Clear(
+                userId: model.UserId,
+                calculationGoodIds: calculationGoodIds,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        transaction.Complete();
     }
 }

@@ -63,4 +63,30 @@ select id, user_id, width, height, length, weight from delivery_goods
 
         return goods.ToList();
     }
+
+    public async Task<int> Clear(long userId, long[] calculationGoodIds, CancellationToken cancellationToken)
+    {   
+        //Postgres doesn't go well with id IN (...) and Dapper somehow
+        const string sqlQuery = @"
+DELETE FROM delivery_goods WHERE id = ANY(@Ids) AND user_id = @UserId; 
+        ";
+
+        var sqlQueryParams = new
+        {
+            Ids = calculationGoodIds,
+            UserId = userId
+        };
+
+        await using NpgsqlConnection connection = await GetAndOpenConnectionAsync(cancellationToken);
+
+        var numOfAffectedRows = await connection.ExecuteAsync(
+            new CommandDefinition(
+                commandText: sqlQuery,
+                parameters: sqlQueryParams,
+                cancellationToken: cancellationToken
+            )
+        );
+
+        return numOfAffectedRows;
+    }
 }

@@ -1,6 +1,7 @@
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using OzonRoute.Domain.Exceptions.Infrastructure;
 using OzonRoute.Domain.Shared.Data.Entities;
 using OzonRoute.Domain.Shared.Data.Interfaces;
 using OzonRoute.Domain.Shared.Data.Models;
@@ -69,9 +70,90 @@ limit @Limit offset @Offset;";
         return calculations.ToList();
     }
 
-    public void ClearData()
-    {
-        throw new NotImplementedException();
+    public async Task<long[]> Clear(long userId, long[] calculationIds, CancellationToken cancellationToken)
+    {   
+        long[] calculationGoodIds = calculationIds.Length == 0 ?
+                            await ClearFull(userId, cancellationToken) :
+                            await ClearParticle(userId, calculationIds, cancellationToken);
+
+        return calculationGoodIds;
     }
 
+    private async Task<long[]> ClearFull(long userId, CancellationToken cancellationToken)
+    {
+        const string sqlQuery = @"
+DELETE FROM calculations WHERE user_id = @UserId
+    returning good_ids;
+        ";
+
+        var sqlQueryParams = new
+        {
+            UserId = userId
+        };
+
+        await using NpgsqlConnection connection = await GetAndOpenConnectionAsync(cancellationToken);
+
+        var calculationGoodIds = await connection.QueryAsync<long[]>(
+            new CommandDefinition(
+                commandText: sqlQuery,
+                parameters: sqlQueryParams,
+                cancellationToken: cancellationToken
+            )
+        );
+        
+        return ConvertToArray(calculationGoodIds);
+    }
+
+    private async Task<long[]> ClearParticle(long userId, long[] calculationIds, CancellationToken cancellationToken)
+    {   
+        //Not passing userId due to calculationIds valudation subsequently
+        //Nothin will be missid caue of transaction mode in invalidation scenario + not spamming db with multiple queries
+       const string sqlQuery = @"
+DELETE FROM calculations WHERE id = ANY(@Ids)
+    returning user_id, id, good_ids;
+       ";
+
+       var sqlQueryParams = new 
+       {
+            Ids = calculationIds
+       };
+
+       await using NpgsqlConnection connection = await GetAndOpenConnectionAsync(cancellationToken);
+
+       var deletedCalculations = await connection.QueryAsync<CalculationEntityV1>(
+            new CommandDefinition(
+                commandText: sqlQuery,
+                parameters: sqlQueryParams,
+                cancellationToken: cancellationToken
+            )
+       );
+
+       ValidatePassedIds(deletedCalculations, userId, calculationIds.Length);
+
+       return ConvertToArray(deletedCalculations.Select(x => x.GoodIds)); 
+    }
+
+    private static long[] ConvertToArray(IEnumerable<long[]> jaggedArray)
+    {
+        return jaggedArray.SelectMany(x => x).ToArray();
+    }
+
+    private static void ValidatePassedIds(IEnumerable<CalculationEntityV1> deletedCalculations, long userId, long numOfCalculationToDelete)
+    {
+        if (deletedCalculations.Count() != numOfCalculationToDelete)
+        {
+            throw new OneOrManyCalculationsNotFoundException("One or many calculations not found.");
+        }
+
+        long[] involdeInvalidUserIds = deletedCalculations.Select(x => x.UserId).Where(id => id != userId).ToArray();
+        if (involdeInvalidUserIds.Length != 0)
+        {
+            long[] invalidCalculationIds = deletedCalculations.Where(x => x.UserId != userId).Select(x => x.Id).ToArray();
+            
+            throw new OneOrManyCalculationsBelongToAnotherUserException(
+                wrongCalculationIds: invalidCalculationIds,
+                message: "One or many calculations belong to another user."
+            );
+        }
+    }
 }
