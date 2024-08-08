@@ -24,6 +24,7 @@ public static class Postgres
             builder => {
                 builder.MapComposite<CalculationEntityV1>("calculations_v1", _translator);
                 builder.MapComposite<CalculationGoodEntityV1>("calculation_goods_v1", _translator);
+                builder.EnableParameterLogging();
             },
             serviceKey: DatabaseType.CalculationsDb);
     }

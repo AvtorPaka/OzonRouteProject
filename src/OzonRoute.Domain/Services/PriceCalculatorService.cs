@@ -139,8 +139,31 @@ internal class PriceCalculatorService : IPriceCalculatorService
         return processedLog;
     }
 
-    public void ClearLog()
-    {
-        _calculationsRepository.ClearData();
+    public async Task ClearHistoryLog(ClearHistoryModel model, CancellationToken cancellationToken)
+    {   
+        try
+        {
+            await ClearHistoryLogUnsafe(model, cancellationToken);
+        }
+        catch (ValidationException ex)
+        {
+            throw new DomainException("Invalid input data.", ex);
+        }
+        catch (OneOrManyCalculationsNotFoundException ex)
+        {   
+            throw new DomainException("Invalid input data.", ex);
+        }
+        catch (OneOrManyCalculationsBelongToAnotherUserException ex)
+        {
+            throw new ClearHistoryForbiddenException("Invalid input data.", ex);
+        }
+    }
+
+    private async Task ClearHistoryLogUnsafe(ClearHistoryModel model, CancellationToken cancellationToken)
+    {   
+        var validator = new ClearHistoryModelValidator();
+        await validator.ValidateAndThrowAsync(model, cancellationToken);
+
+        throw new NotImplementedException();
     }
 }

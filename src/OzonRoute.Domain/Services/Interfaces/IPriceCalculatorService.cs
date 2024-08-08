@@ -6,5 +6,5 @@ public interface IPriceCalculatorService
 {
     public Task<double> CalculatePrice(DeliveryGoodsContainer deliveryGoodsContainer, CancellationToken cancellationToken);
     public Task<IReadOnlyList<CalculationLogModel>> QueryLog(GetHistoryModel model, CancellationToken cancellationToken);
-    public void ClearLog();
+    public Task ClearHistoryLog(ClearHistoryModel model, CancellationToken cancellationToken);
 }

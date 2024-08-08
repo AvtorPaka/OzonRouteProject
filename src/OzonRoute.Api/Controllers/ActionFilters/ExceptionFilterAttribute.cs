@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using OzonRoute.Api.Responses.Errors;
 using OzonRoute.Domain.Exceptions.Domain;
+using OzonRoute.Domain.Exceptions.Infrastructure;
 
 namespace OzonRoute.Api.Controllers.ActionFilters;
 public sealed class ExceptionFilterAttribute : Attribute, IExceptionFilter
@@ -10,7 +11,10 @@ public sealed class ExceptionFilterAttribute : Attribute, IExceptionFilter
     public void OnException(ExceptionContext context)
     {
         switch (context.Exception)
-        {
+        {   
+            case ClearHistoryForbiddenException exception:
+                HandleClearHistoryForbidden(context, exception);
+                break;
             case DomainException exception:
                 HandleBadRequest(context, exception);
                 break;
@@ -22,16 +26,31 @@ public sealed class ExceptionFilterAttribute : Attribute, IExceptionFilter
 
     private static void HandleBadRequest(ExceptionContext context, Exception exception)
     {
-        JsonResult jsonValidationResult = new(
+        JsonResult jsonResult = new(
             new ErrorResponse(
             StatusCode: HttpStatusCode.BadRequest,
-            Exceptions: QueryExceptions(exception)
+            Exceptions: QueryExceptionsMessages(exception)
         ))
         {
             StatusCode = (int)HttpStatusCode.BadRequest
         };
 
-        context.Result = jsonValidationResult;
+        context.Result = jsonResult;
+    }
+
+    private static void HandleClearHistoryForbidden(ExceptionContext context, ClearHistoryForbiddenException exception)
+    {
+        JsonResult jsonResult = new JsonResult(
+            new ClearHistoryForbiddenResponse(
+                StatusCode: HttpStatusCode.Forbidden,
+                WrongCalculationIds: (exception.InnerException as OneOrManyCalculationsBelongToAnotherUserException)!.WrongCalculationsIds,
+                Exceptions: QueryExceptionsMessages(exception)
+            )
+        ){
+            StatusCode = (int)HttpStatusCode.Forbidden
+        };
+
+        context.Result = jsonResult;
     }
 
     private static void HandleInternalServerError(ExceptionContext context)
@@ -48,7 +67,7 @@ public sealed class ExceptionFilterAttribute : Attribute, IExceptionFilter
         context.Result = jsonErrorResult;
     }
 
-    private static IEnumerable<string> QueryExceptions(Exception exception)
+    private static IEnumerable<string> QueryExceptionsMessages(Exception exception)
     {   
         yield return exception.Message;
 

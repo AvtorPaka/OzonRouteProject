@@ -5,6 +5,7 @@ using OzonRoute.Api.Responses.V1;
 using OzonRoute.Api.Responses.V1.Extensions;
 using OzonRoute.Domain.Services.Interfaces;
 using OzonRoute.Domain.Models;
+using OzonRoute.Api.Responses.Errors;
 
 namespace OzonRoute.Api.Controllers.V1;
 
@@ -58,12 +59,16 @@ public class V1DeliveryPriceController : ControllerBase
     }
 
     [HttpDelete]
-    [Route("delete-history")]
+    [Route("clear-history")]
     [ProducesResponseType(200)]
-    public async Task<IActionResult> DeleteHistory(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ClearHistoryForbiddenResponse), 403)]
+    public async Task<IActionResult> DeleteHistory(ClearHistoryRequest request, CancellationToken cancellationToken)
     {
-        await Task.Delay(TimeSpan.FromMilliseconds(1), cancellationToken); //Fiction
-        _priceCalculatorService.ClearLog();
+        await _priceCalculatorService.ClearHistoryLog(
+            model: request.MapRequestToModel(),
+            cancellationToken: cancellationToken
+        );
+
         return Ok();
     }
 
@@ -74,7 +79,7 @@ public class V1DeliveryPriceController : ControllerBase
         [FromServices] IReportsService reportsService,
         CancellationToken cancellationToken)
     {
-        ReportModel reportModel = await  reportsService.GetReport(cancellationToken);
+        ReportModel reportModel = await reportsService.GetReport(cancellationToken);
         ReportsResponse reportsResponse = await reportModel.MapModelToResponse();
 
         return Ok(reportsResponse);
