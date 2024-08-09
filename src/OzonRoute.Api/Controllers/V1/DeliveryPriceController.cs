@@ -53,15 +53,35 @@ public class V1DeliveryPriceController : ControllerBase
                 Skip: request.Skip
             ),
             cancellationToken: cancellationToken);
+
         IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();
 
         return Ok(response);
     }
 
+    [HttpGet]
+    [Route("get-history/by-ids")]
+    [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
+    [ProducesResponseType(typeof(WrongCalculationIdsResponse), 403)]
+    public async Task<IActionResult> GetHistoryByIds([FromQuery] GetHistoryByIdsRequest request, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<CalculationLogModel> calculationHistory = await _priceCalculatorService.QueryLogByIds(
+            new GetHistoryByIdsModel(
+                UserId: request.UserId,
+                CalculationIds: request.CalculationIds ?? []
+            ),
+            cancellationToken: cancellationToken
+        );
+
+        IReadOnlyList<GetHistoryResponse> result = await calculationHistory.MapModelsToResponses();
+
+        return Ok(result);
+    }
+
     [HttpDelete]
     [Route("clear-history")]
     [ProducesResponseType(200)]
-    [ProducesResponseType(typeof(ClearHistoryForbiddenResponse), 403)]
+    [ProducesResponseType(typeof(WrongCalculationIdsResponse), 403)]
     public async Task<IActionResult> DeleteHistory(ClearHistoryRequest request, CancellationToken cancellationToken)
     {
         await _priceCalculatorService.ClearHistoryLog(

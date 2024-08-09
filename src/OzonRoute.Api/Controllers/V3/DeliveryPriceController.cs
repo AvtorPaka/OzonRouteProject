@@ -5,6 +5,7 @@ using OzonRoute.Api.Responses.V3;
 using OzonRoute.Api.Responses.V3.Extensions;
 using OzonRoute.Domain.Services.Interfaces;
 using OzonRoute.Domain.Models;
+using OzonRoute.Api.Responses.Errors;
 
 namespace OzonRoute.Api.Controllers.V3;
 
@@ -55,5 +56,24 @@ public class V3DeliveryPriceController : ControllerBase
         IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();
 
         return Ok(response);
+    }
+
+    [HttpGet]
+    [Route("get-history/by-ids")]
+    [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
+    [ProducesResponseType(typeof(WrongCalculationIdsResponse), 403)]
+    public async Task<IActionResult> GetHistoryByIds([FromQuery] GetHistoryByIdsRequest request, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<CalculationLogModel> calculationHistory = await _priceCalculatorService.QueryLogByIds(
+            new GetHistoryByIdsModel(
+                UserId: request.UserId,
+                CalculationIds: request.CalculationIds ?? []
+            ),
+            cancellationToken: cancellationToken
+        );
+
+        IReadOnlyList<GetHistoryResponse> result = await calculationHistory.MapModelsToResponses();
+
+        return Ok(result);
     }
 }

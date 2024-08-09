@@ -155,7 +155,7 @@ internal class PriceCalculatorService : IPriceCalculatorService
         }
         catch (OneOrManyCalculationsBelongToAnotherUserException ex)
         {
-            throw new ClearHistoryForbiddenException("Invalid input data.", ex);
+            throw new WrongCalculationIdsException("Invalid input data.", ex);
         }
     }
 
@@ -182,5 +182,40 @@ internal class PriceCalculatorService : IPriceCalculatorService
         }
 
         transaction.Complete();
+    }
+
+    public async Task<IReadOnlyList<CalculationLogModel>> QueryLogByIds(GetHistoryByIdsModel model, CancellationToken cancellationToken)
+    {   
+        try
+        {
+            return await QueryLogByIdsUnsafe(model, cancellationToken);
+        }
+        catch (ValidationException ex)
+        {
+            throw new DomainException("Invalid input data.", ex);
+        }
+        catch (OneOrManyCalculationsBelongToAnotherUserException ex)
+        {
+            throw new WrongCalculationIdsException("Invalid input data", ex);
+        }
+        catch (OneOrManyCalculationsNotFoundException ex)
+        {
+            throw new DomainException("Invalid input data.", ex);
+        }
+    }
+
+    private async Task<IReadOnlyList<CalculationLogModel>> QueryLogByIdsUnsafe(GetHistoryByIdsModel model, CancellationToken cancellationToken)
+    {   
+        var validator = new GetHistoryByIdsModelValidator();
+        await validator.ValidateAndThrowAsync(model, cancellationToken);
+
+        IReadOnlyList<CalculationEntityV1> queriedCalculations = await _calculationsRepository.QueryByIds(
+            userId: model.UserId,
+            calculationIds: model.CalculationIds.ToArray(),
+            cancellationToken: cancellationToken
+        );
+
+        IReadOnlyList<CalculationLogModel> result = await queriedCalculations.MapEntitiesToModels();
+        return result;
     }
 }

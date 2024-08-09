@@ -3,12 +3,12 @@ using OzonRoute.Domain.Models;
 
 namespace OzonRoute.Domain.Validators;
 
-public class ClearHistoryModelValidator : AbstractValidator<ClearHistoryModel>
+public class GetHistoryByIdsModelValidator : AbstractValidator<GetHistoryByIdsModel>
 {
-    public ClearHistoryModelValidator()
+    public GetHistoryByIdsModelValidator()
     {
         RuleFor(x => x.UserId).GreaterThan(0);
-        RuleFor(x => x.CalculationIds).NotNull();
+        RuleFor(x => x.CalculationIds).NotNull().NotEmpty();
         RuleForEach(x => x.CalculationIds).ChildRules(num => 
         {
             num.RuleFor(x => x).GreaterThan(0);

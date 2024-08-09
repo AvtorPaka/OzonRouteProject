@@ -47,13 +47,11 @@ public sealed class Startup
 
     public void Configure(IApplicationBuilder app)
     {
-        // if (_env.IsDevelopment())
-        // {
-        // }
         app.UseSwagger();
         app.UseSwaggerUI();
 
         app.UseRouting();
+        
         //Buffering for logging requests data
         app.Use(async (context, next) =>
         {

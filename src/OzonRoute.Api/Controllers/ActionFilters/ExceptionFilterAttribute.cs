@@ -12,8 +12,8 @@ public sealed class ExceptionFilterAttribute : Attribute, IExceptionFilter
     {
         switch (context.Exception)
         {   
-            case ClearHistoryForbiddenException exception:
-                HandleClearHistoryForbidden(context, exception);
+            case WrongCalculationIdsException exception:
+                HandleWrongCalculationIdsForbiddenException(context, exception);
                 break;
             case DomainException exception:
                 HandleBadRequest(context, exception);
@@ -38,15 +38,16 @@ public sealed class ExceptionFilterAttribute : Attribute, IExceptionFilter
         context.Result = jsonResult;
     }
 
-    private static void HandleClearHistoryForbidden(ExceptionContext context, ClearHistoryForbiddenException exception)
+    private static void HandleWrongCalculationIdsForbiddenException(ExceptionContext context, WrongCalculationIdsException exception)
     {
         JsonResult jsonResult = new JsonResult(
-            new ClearHistoryForbiddenResponse(
+            new WrongCalculationIdsResponse(
                 StatusCode: HttpStatusCode.Forbidden,
                 WrongCalculationIds: (exception.InnerException as OneOrManyCalculationsBelongToAnotherUserException)!.WrongCalculationsIds,
                 Exceptions: QueryExceptionsMessages(exception)
             )
-        ){
+        )
+        {
             StatusCode = (int)HttpStatusCode.Forbidden
         };
 

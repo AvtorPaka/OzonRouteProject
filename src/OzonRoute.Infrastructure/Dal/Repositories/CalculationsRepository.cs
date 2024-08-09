@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -128,7 +129,7 @@ DELETE FROM calculations WHERE id = ANY(@Ids)
             )
        );
 
-       ValidatePassedIds(deletedCalculations, userId, calculationIds.Length);
+       ValidatePassedCalculationIds(deletedCalculations, userId, calculationIds.Length);
 
        return ConvertToArray(deletedCalculations.Select(x => x.GoodIds)); 
     }
@@ -138,17 +139,44 @@ DELETE FROM calculations WHERE id = ANY(@Ids)
         return jaggedArray.SelectMany(x => x).ToArray();
     }
 
-    private static void ValidatePassedIds(IEnumerable<CalculationEntityV1> deletedCalculations, long userId, long numOfCalculationToDelete)
+    public async Task<IReadOnlyList<CalculationEntityV1>> QueryByIds(long userId, long[] calculationIds, CancellationToken cancellationToken)
     {
-        if (deletedCalculations.Count() != numOfCalculationToDelete)
+        const string sqlQuery = @"
+SELECT * FROM calculations WHERE id = ANY(@Ids);
+        ";
+
+        var sqlQueryParams = new
+        {
+            Ids = calculationIds
+        };
+
+        await using NpgsqlConnection connection = await GetAndOpenConnectionAsync(cancellationToken);
+
+        var queriedCalculations = await connection.QueryAsync<CalculationEntityV1>(
+            new CommandDefinition(
+                commandText: sqlQuery,
+                parameters: sqlQueryParams,
+                cancellationToken: cancellationToken
+            )
+        );
+
+        ValidatePassedCalculationIds(queriedCalculations, userId, calculationIds.Length);
+
+        return queriedCalculations.ToList();
+    }
+
+    private static void ValidatePassedCalculationIds(IEnumerable<CalculationEntityV1> involvedCalculations, long userId, long expectedNumOfCalculations)
+    {
+        if (involvedCalculations.Count() != expectedNumOfCalculations)
         {
             throw new OneOrManyCalculationsNotFoundException("One or many calculations not found.");
         }
 
-        long[] involdeInvalidUserIds = deletedCalculations.Select(x => x.UserId).Where(id => id != userId).ToArray();
-        if (involdeInvalidUserIds.Length != 0)
+        long[] invalidUserIds = involvedCalculations.Select(x => x.UserId).Where(id => id != userId).Distinct().ToArray();
+
+        if (invalidUserIds.Length != 0)
         {
-            long[] invalidCalculationIds = deletedCalculations.Where(x => x.UserId != userId).Select(x => x.Id).ToArray();
+            long[] invalidCalculationIds = involvedCalculations.Where(x => x.UserId != userId).Select(x => x.Id).ToArray();
             
             throw new OneOrManyCalculationsBelongToAnotherUserException(
                 wrongCalculationIds: invalidCalculationIds,
