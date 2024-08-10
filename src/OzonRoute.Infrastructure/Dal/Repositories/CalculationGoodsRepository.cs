@@ -7,7 +7,7 @@ using OzonRoute.Infrastructure.Dal.Infrastructure;
 
 namespace OzonRoute.Infrastructure.Dal.Repositories;
 
-public class CalculationGoodsRepository : BaseRepository, ICalculationGoodsRepository
+internal sealed class CalculationGoodsRepository : BaseRepository, ICalculationGoodsRepository
 {
     public CalculationGoodsRepository([FromKeyedServices(DatabaseType.CalculationsDb)] NpgsqlDataSource dataSource) : base(dataSource)
     {

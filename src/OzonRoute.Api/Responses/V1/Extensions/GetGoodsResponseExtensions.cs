@@ -11,7 +11,7 @@ public static class GetGoodsResponseExtensions
             Name: storageGoodModel.Name,
             Id: storageGoodModel.Id,
             Count: storageGoodModel.Count,
-            Lenght: storageGoodModel.Lenght / cmToMRatio,
+            Length: storageGoodModel.Length / cmToMRatio,
             Width: storageGoodModel.Width / cmToMRatio,
             Height: storageGoodModel.Height / cmToMRatio,
             Weight: storageGoodModel.Weight,

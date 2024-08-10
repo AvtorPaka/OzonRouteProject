@@ -6,7 +6,6 @@ using OzonRoute.Domain.Shared.Data.Interfaces;
 using OzonRoute.Domain.Configuration.Models;
 using OzonRoute.Domain.Validators;
 using FluentValidation;
-using OzonRoute.Domain.Exceptions;
 using OzonRoute.Domain.Exceptions.Domain;
 using OzonRoute.Domain.Exceptions.Infrastructure;
 
@@ -30,7 +29,7 @@ internal class PriceCalculatorService : IPriceCalculatorService
         _calculationGoodsRepository = calculationGoodsRepository;
     }
 
-    public async Task<double> CalculatePrice(DeliveryGoodsContainer deliveryGoodsContainer, CancellationToken cancellationToken)
+    public async Task<SaveCalculationModel> CalculatePrice(DeliveryGoodsContainer deliveryGoodsContainer, CancellationToken cancellationToken)
     {   
         try
         {
@@ -40,34 +39,27 @@ internal class PriceCalculatorService : IPriceCalculatorService
         {
             throw new DomainException("Invalid input data", ex);
         }
-        catch (EntityNotFoundException ex)
-        {
-            throw new DomainException("Invalid input data", ex);
-        }
     }
 
-    private async Task<double> CalculatePriceUnsafe(DeliveryGoodsContainer deliveryGoodsContainer, CancellationToken cancellationToken)
+    private async Task<SaveCalculationModel> CalculatePriceUnsafe(DeliveryGoodsContainer deliveryGoodsContainer, CancellationToken cancellationToken)
     {
         var validator = new DeliveryGoodsContainerValidator();
         await validator.ValidateAndThrowAsync(deliveryGoodsContainer, cancellationToken);
 
-        double finalPrice = CalculatePriceForOneMetr(deliveryGoodsContainer.Goods , out double summaryVolume, out double summaryWeight) * deliveryGoodsContainer.Distance;
+        double finalPrice = CalculatePriceForOneMetr(deliveryGoodsContainer.Goods
+                                                    ,out double summaryVolume
+                                                    ,out double summaryWeight) * deliveryGoodsContainer.Distance;
 
-        await SaveCalculationsData(
-            saveModel: new SaveCalculationModel(
+        return new SaveCalculationModel(
                 GoodsContainer: deliveryGoodsContainer,
                 TotalVolume: summaryVolume,
                 TotalWeight: summaryWeight,
                 Price: (decimal)finalPrice,
                 At: DateTime.UtcNow
-            ),
-            token: cancellationToken
-        );
-
-        return finalPrice;
+            );
     }
 
-    private async Task SaveCalculationsData(SaveCalculationModel saveModel, CancellationToken token)
+    public async Task SaveCalculationsData(SaveCalculationModel saveModel, CancellationToken token)
     {   
         using var transaction = _calculationsRepository.CreateTransactionScope();
 

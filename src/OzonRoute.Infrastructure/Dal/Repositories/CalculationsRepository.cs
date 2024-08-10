@@ -70,6 +70,31 @@ limit @Limit offset @Offset;";
 
         return calculations.ToList();
     }
+    public async Task<IReadOnlyList<CalculationEntityV1>> QueryByIds(long userId, long[] calculationIds, CancellationToken cancellationToken)
+    {
+        const string sqlQuery = @"
+SELECT * FROM calculations WHERE id = ANY(@Ids);
+        ";
+
+        var sqlQueryParams = new
+        {
+            Ids = calculationIds
+        };
+
+        await using NpgsqlConnection connection = await GetAndOpenConnectionAsync(cancellationToken);
+
+        var queriedCalculations = await connection.QueryAsync<CalculationEntityV1>(
+            new CommandDefinition(
+                commandText: sqlQuery,
+                parameters: sqlQueryParams,
+                cancellationToken: cancellationToken
+            )
+        );
+
+        ValidatePassedCalculationIds(queriedCalculations, userId, calculationIds.Length);
+
+        return queriedCalculations.ToList();
+    }
 
     public async Task<long[]> Clear(long userId, long[] calculationIds, CancellationToken cancellationToken)
     {   
@@ -139,31 +164,6 @@ DELETE FROM calculations WHERE id = ANY(@Ids)
         return jaggedArray.SelectMany(x => x).ToArray();
     }
 
-    public async Task<IReadOnlyList<CalculationEntityV1>> QueryByIds(long userId, long[] calculationIds, CancellationToken cancellationToken)
-    {
-        const string sqlQuery = @"
-SELECT * FROM calculations WHERE id = ANY(@Ids);
-        ";
-
-        var sqlQueryParams = new
-        {
-            Ids = calculationIds
-        };
-
-        await using NpgsqlConnection connection = await GetAndOpenConnectionAsync(cancellationToken);
-
-        var queriedCalculations = await connection.QueryAsync<CalculationEntityV1>(
-            new CommandDefinition(
-                commandText: sqlQuery,
-                parameters: sqlQueryParams,
-                cancellationToken: cancellationToken
-            )
-        );
-
-        ValidatePassedCalculationIds(queriedCalculations, userId, calculationIds.Length);
-
-        return queriedCalculations.ToList();
-    }
 
     private static void ValidatePassedCalculationIds(IEnumerable<CalculationEntityV1> involvedCalculations, long userId, long expectedNumOfCalculations)
     {

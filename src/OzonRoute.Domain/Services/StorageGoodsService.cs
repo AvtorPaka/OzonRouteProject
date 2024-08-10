@@ -18,21 +18,22 @@ internal sealed class StorageGoodsService : IStorageGoodsService
         _storageGoodsRepository = storageGoodsRepository;
     }
 
-    public async Task<IReadOnlyList<StorageGoodModel>> GetGoodsFromStorage(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<StorageGoodModel>> QueryGoods(CancellationToken cancellationToken)
     {
-        var goodEntities = await _storageGoodsRepository.GetAllGoods();
+        var goodEntities = await _storageGoodsRepository.Query(cancellationToken);
         return await goodEntities.MapEntitysToModels();
     }
 
     public async Task UpdateGoods(IEnumerable<StorageGoodEntity> goodEntities, CancellationToken cancellationToken)
-    {
-        foreach (var good in goodEntities)
-        {
-            await _storageGoodsRepository.AddOrUpdate(good, cancellationToken);
-        }
+    {   
+        using var transaction = _storageGoodsRepository.CreateTransactionScope();
+
+        await _storageGoodsRepository.AddOrUpdate(goodEntities.ToArray(), cancellationToken);
+
+        transaction.Complete();
     }
 
-    public async Task<double> CalculateFullPrice(IPriceCalculatorService priceCalculatorService, int id, CancellationToken cancellationToken)
+    public async Task<double> CalculateFullPrice(IPriceCalculatorService priceCalculatorService, long id, CancellationToken cancellationToken)
     {
         try
         {
@@ -40,26 +41,26 @@ internal sealed class StorageGoodsService : IStorageGoodsService
         }
         catch (ValidationException ex)
         {
-            throw new DomainException("Invalid input data", ex);
+            throw new DomainException("Invalid input data.", ex);
         }
         catch (EntityNotFoundException ex)
         {
-            throw new DomainException("Invalid input data", ex);
+            throw new DomainException("Invalid input data.", ex);
         }
     }
 
-    private async Task<double> CalculateFullPriceUnsafe(IPriceCalculatorService priceCalculatorService, int id, CancellationToken cancellationToken)
+    private async Task<double> CalculateFullPriceUnsafe(IPriceCalculatorService priceCalculatorService, long id, CancellationToken cancellationToken)
     {
-        StorageGoodEntity entity = await _storageGoodsRepository.Get(id);
+        StorageGoodEntity entity = await _storageGoodsRepository.QuerySingle(id, cancellationToken);
+
         DeliveryGoodModel goodModel = new DeliveryGoodModel(
-            Lenght: entity.Lenght,
+            Lenght: entity.Length,
             Width: entity.Width,
             Height: entity.Height,
             Weight: entity.Weight
         );
 
-        // TODO: Do smth with UserId
-        double shipPrice = await priceCalculatorService.CalculatePrice(
+        var saveModel = await priceCalculatorService.CalculatePrice(
             new DeliveryGoodsContainer(
                 UserId: int.MaxValue/2,
                 Goods: [goodModel],
@@ -67,7 +68,7 @@ internal sealed class StorageGoodsService : IStorageGoodsService
             ),
             cancellationToken);
             
-        double finalPrice = shipPrice + entity.Price;
+        double finalPrice = (double)saveModel.Price + (double)entity.Price;
 
         return finalPrice;
     }

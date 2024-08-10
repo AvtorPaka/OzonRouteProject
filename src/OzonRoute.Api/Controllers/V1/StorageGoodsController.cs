@@ -3,7 +3,6 @@ using OzonRoute.Api.Responses.V1;
 using OzonRoute.Api.Responses.V1.Extensions;
 using OzonRoute.Domain.Models;
 using OzonRoute.Domain.Services.Interfaces;
-using OzonRoute.Domain.Shared.Data.Entities;
 
 namespace OzonRoute.Api.Controllers.V1;
 
@@ -12,12 +11,10 @@ namespace OzonRoute.Api.Controllers.V1;
 public class V1StorageGoodsController : ControllerBase
 {
     private readonly IStorageGoodsService _storageGoodsService;
-    private readonly ILogger<V1StorageGoodsController> _logger;
 
-    public V1StorageGoodsController([FromServices] IStorageGoodsService storageGoodsService, ILogger<V1StorageGoodsController> logger)
+    public V1StorageGoodsController([FromServices] IStorageGoodsService storageGoodsService)
     {
         _storageGoodsService = storageGoodsService;
-        _logger = logger;
     }
 
     [HttpGet]
@@ -25,7 +22,7 @@ public class V1StorageGoodsController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<GetGoodsResponse>), 200)]
     public async Task<IActionResult> GetGoods(CancellationToken cancellationToken)
     {
-        IReadOnlyList<StorageGoodModel> goodsModels = await _storageGoodsService.GetGoodsFromStorage(cancellationToken);
+        IReadOnlyList<StorageGoodModel> goodsModels = await _storageGoodsService.QueryGoods(cancellationToken);
         IReadOnlyList<GetGoodsResponse> response = await goodsModels.MapModelsToResponse();
 
         return Ok(response);

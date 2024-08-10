@@ -6,10 +6,10 @@ public static class StorageGoodModelExtensions
     public static StorageGoodEntity MapModelToEntity(this StorageGoodModel storageGoodModel)
     {
         return new StorageGoodEntity(
-            Name: storageGoodModel.Name,
+            Name: storageGoodModel.Name.TrimEnd(),
             Id: storageGoodModel.Id,
             Count: storageGoodModel.Count,
-            Lenght: storageGoodModel.Lenght,
+            Length: storageGoodModel.Length,
             Width: storageGoodModel.Width,
             Height: storageGoodModel.Height,
             Weight: storageGoodModel.Weight,
@@ -25,10 +25,10 @@ public static class StorageGoodModelExtensions
     public static StorageGoodModel MapEntityToModel(this StorageGoodEntity goodEntity)
     {
         return new StorageGoodModel(
-            Name: goodEntity.Name,
+            Name: goodEntity.Name.TrimEnd(),
             Id: goodEntity.Id,
             Count: goodEntity.Count,
-            Lenght: goodEntity.Lenght,
+            Length: goodEntity.Length,
             Width: goodEntity.Width,
             Height: goodEntity.Height,
             Weight: goodEntity.Weight,

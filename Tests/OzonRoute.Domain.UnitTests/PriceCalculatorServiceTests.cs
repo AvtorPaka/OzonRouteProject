@@ -35,28 +35,30 @@ public class PriceCalculatorServiceTests
         var cts = new CancellationTokenSource();
         var builder = new PriceCalculatorServiceBuilder();
 
-        builder.CalculationsRepository
-            .SetupAddCalculations()
-            .SetupCreateTransactionScope();
+        // builder.CalculationsRepository
+        //     .SetupAddCalculations()
+        //     .SetupCreateTransactionScope();
             
-        builder.CalculationGoodsRepository
-            .SetupAddCalculationGoods();
+        // builder.CalculationGoodsRepository
+        //     .SetupAddCalculationGoods();
 
         var cut = builder.Build();
 
         //Act
-        double result = await cut.CalculatePrice(
+        var saveModel = await cut.CalculatePrice(
             deliveryGoodsContainer: modelsContainer,
             cancellationToken: cts.Token);
+
+        double result = (double)saveModel.Price;
 
         //Assert
         Assert.Equal(expected, result);
 
-        cut.CalculationsRepository
-            .VerifyAddCalculationsWasCalledOnce()
-            .VerifyCreateTransactionScopeWasCalledOnce(IsolationLevel.ReadCommitted);
-        cut.CalculationGoodsRepository.
-            VerifyAddCalculationGoodsWasCalledOnce();
+        // cut.CalculationsRepository
+        //     .VerifyAddCalculationsWasCalledOnce()
+        //     .VerifyCreateTransactionScopeWasCalledOnce(IsolationLevel.ReadCommitted);
+        // cut.CalculationGoodsRepository.
+        //     VerifyAddCalculationGoodsWasCalledOnce();
 
         cut.VerifyNoOtherCalls();
     }
@@ -70,17 +72,17 @@ public class PriceCalculatorServiceTests
         var cts = new CancellationTokenSource();
         var builder = new PriceCalculatorServiceBuilder();
 
-        builder.CalculationsRepository
-            .SetupAddCalculations()
-            .SetupCreateTransactionScope();
+        // builder.CalculationsRepository
+        //     .SetupAddCalculations()
+        //     .SetupCreateTransactionScope();
             
-        builder.CalculationGoodsRepository
-            .SetupAddCalculationGoods();
+        // builder.CalculationGoodsRepository
+        //     .SetupAddCalculationGoods();
 
         var cut = builder.Build();
 
         //Act
-        double result = await cut.CalculatePrice(
+        var saveModel = await cut.CalculatePrice(
             new DeliveryGoodsContainer(
             UserId: 1,
             Goods: new List<DeliveryGoodModel>() {new DeliveryGoodModel(
@@ -92,14 +94,16 @@ public class PriceCalculatorServiceTests
             Distance: 1000),
             cancellationToken: cts.Token);
 
+        double result = (double)saveModel.Price;
+
         //Assert
         Assert.Equal(expected, result);
         
-        cut.CalculationsRepository
-            .VerifyAddCalculationsWasCalledOnce()
-            .VerifyCreateTransactionScopeWasCalledOnce(IsolationLevel.ReadCommitted);
-        cut.CalculationGoodsRepository.
-            VerifyAddCalculationGoodsWasCalledOnce();
+        // cut.CalculationsRepository
+        //     .VerifyAddCalculationsWasCalledOnce()
+        //     .VerifyCreateTransactionScopeWasCalledOnce(IsolationLevel.ReadCommitted);
+        // cut.CalculationGoodsRepository.
+        //     VerifyAddCalculationGoodsWasCalledOnce();
 
         cut.VerifyNoOtherCalls();
     }
@@ -113,26 +117,29 @@ public class PriceCalculatorServiceTests
 
         var builder = new PriceCalculatorServiceBuilder();
 
-        builder.CalculationsRepository
-            .SetupAddCalculations()
-            .SetupCreateTransactionScope();
+        // builder.CalculationsRepository
+        //     .SetupAddCalculations()
+        //     .SetupCreateTransactionScope();
             
-        builder.CalculationGoodsRepository
-            .SetupAddCalculationGoods();
+        // builder.CalculationGoodsRepository
+        //     .SetupAddCalculationGoods();
 
         var cut = builder.Build();
 
         //Act
-        double result = await cut.CalculatePrice(
+        var saveModel = await cut.CalculatePrice(
             deliveryGoodsContainer: modelsContainer,
             cancellationToken: cts.Token);
 
+        double result = (double)saveModel.Price;
+
         //Assert
-        cut.CalculationsRepository
-            .VerifyAddCalculationsWasCalledOnce()
-            .VerifyCreateTransactionScopeWasCalledOnce(IsolationLevel.ReadCommitted);
-        cut.CalculationGoodsRepository.
-            VerifyAddCalculationGoodsWasCalledOnce();
+        
+        // cut.CalculationsRepository
+        //     .VerifyAddCalculationsWasCalledOnce()
+        //     .VerifyCreateTransactionScopeWasCalledOnce(IsolationLevel.ReadCommitted);
+        // cut.CalculationGoodsRepository.
+        //     VerifyAddCalculationGoodsWasCalledOnce();
 
         cut.VerifyNoOtherCalls();
     }

@@ -29,7 +29,13 @@ public class V1DeliveryPriceController : ControllerBase
         CancellationToken cancellationToken)
     {
         var requestModel = await request.MapRequestToModelsContainer();
-        double resultPrice = await _priceCalculatorService.CalculatePrice(requestModel, cancellationToken);
+        var saveCalculationsModel = await _priceCalculatorService.CalculatePrice(requestModel, cancellationToken);
+        double resultPrice = (double)saveCalculationsModel.Price;
+
+        await _priceCalculatorService.SaveCalculationsData(
+            saveModel: saveCalculationsModel,
+            token: cancellationToken
+        );
 
         await reportsService.CalculateNewReportData(
             goods: requestModel.Goods,

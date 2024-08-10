@@ -9,9 +9,9 @@
             <p>Name: @goodModel.Name</p>
             <p>Price: @goodModel.Price</p>
             <p>Avaliable ammount: @goodModel.Count</p>
-            <p>Volume: @(Math.Round(goodModel.Height * goodModel.Lenght * goodModel.Width, 4))</p>
+            <p>Volume: @(Math.Round(goodModel.Height * goodModel.Length * goodModel.Width, 4))</p>
             <p>Weight: @goodModel.Weight</p>
-            <p> <a href="/v1/goods/price?Id=@goodModel.Id">Стоимость доставки</a></p>
+            <p> <a href="/v1/storage/goods/price?Id=@goodModel.Id">Стоимость доставки</a></p>
         </li>
     }
 </ul>

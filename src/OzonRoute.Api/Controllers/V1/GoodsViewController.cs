@@ -20,7 +20,8 @@ public class V1GoodsViewController: Controller
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        IReadOnlyList<StorageGoodModel> goodsModels = await _storageGoodsService.GetGoodsFromStorage(cancellationToken);
+        IReadOnlyList<StorageGoodModel> goodsModels = await _storageGoodsService.QueryGoods(cancellationToken);
+        
         IReadOnlyList<GetGoodsResponse> response = await goodsModels.MapModelsToResponse();
         GoodsPageViewModel viewModel = new GoodsPageViewModel(response);
 

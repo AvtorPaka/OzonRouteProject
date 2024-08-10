@@ -8,7 +8,7 @@ public class InitSchema : Migration
     public override void Up()
     {
         Create.Table("delivery_goods")
-            .WithColumn("id").AsInt64().PrimaryKey("goods_pk").Identity()
+            .WithColumn("id").AsInt64().PrimaryKey("delivery_goods_pk").Identity()
             .WithColumn("user_id").AsInt64().NotNullable()
             .WithColumn("width").AsDouble().NotNullable()
             .WithColumn("height").AsDouble().NotNullable()
