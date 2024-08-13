@@ -21,9 +21,7 @@ public class GoodsSyncHostedService : BackgroundService
     {
         _logger.LogInformation(">>GoodsSync Host Service start executting. | Date : {curDate}", DateTime.Now);
 
-        await ProccesGoods(cancellationToken);
-
-        using PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        using PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(45));
         try
         {
             while (await periodicTimer.WaitForNextTickAsync(cancellationToken))
@@ -41,8 +39,9 @@ public class GoodsSyncHostedService : BackgroundService
     {
         _logger.LogInformation(">>GoodsSync Host Service start processing goods | Date : {curDate}", DateTime.Now);
         using var scope = _serviceProvider.CreateAsyncScope();
+
         IGoodsDetachedService goodsDetachedService = scope.ServiceProvider.GetRequiredService<IGoodsDetachedService>();
-        IGoodsService goodsService = scope.ServiceProvider.GetRequiredService<IGoodsService>();
+        IStorageGoodsService goodsService = scope.ServiceProvider.GetRequiredService<IStorageGoodsService>();
 
         var goods = await goodsDetachedService.GetGoodsFromDetached(cancellationToken);
         await goodsService.UpdateGoods(goods, cancellationToken);

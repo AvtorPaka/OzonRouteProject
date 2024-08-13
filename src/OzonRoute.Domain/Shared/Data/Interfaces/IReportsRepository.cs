@@ -5,8 +5,8 @@ namespace OzonRoute.Domain.Shared.Data.Interfaces;
 
 public interface IReportsRepository
 {
-    public Task<ReportEntity> GetReportData(CancellationToken cancellationToken);
-    public void UpdateWavgPrice(double goodsFinalPrice, int goodsCount);
-    public void UpdateMaxVolumeAndDistance(double maxVolume, int distance);
-    public void UpdateMaxWeightAndDistance(double maxWeight, int distance);
+    public Task<ReportEntity> Get(long userId, CancellationToken cancellationToken);
+    public Task AddOrUpdate(ReportEntity entity, CancellationToken cancellationToken);
+    public Task AddOrUpdateWithExpiration(ReportEntity entity, CancellationToken cancellationToken);
+    public Task Delete(long userId, CancellationToken cancellationToken);
 }

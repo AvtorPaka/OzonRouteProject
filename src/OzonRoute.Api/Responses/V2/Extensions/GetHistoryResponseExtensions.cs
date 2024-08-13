@@ -6,19 +6,22 @@ public static class GetHistoryResponseExtensions
 {   
     private const double kgToGramsRatio = 1000.0d;
     private const double cm3ToMm3Ratio = 1000.0d;
-    public static GetHistoryResponse MapModelToResponse(this CalculateLogModel calculateLogModel)
+    public static GetHistoryResponse MapModelToResponse(this CalculationLogModel calculationLogModel)
     {
         return new GetHistoryResponse(
-            At: calculateLogModel.At,
+            At: calculationLogModel.At,
+            Id: calculationLogModel.Id,
+            UserId: calculationLogModel.UserId,
             Cargo: new CargoResponse(
-                Volume: calculateLogModel.Volume * cm3ToMm3Ratio,
-                Weight: calculateLogModel.Weight * kgToGramsRatio),
-            Price: calculateLogModel.Price
+                GoodsIds: calculationLogModel.GoodsIds,
+                Volume: calculationLogModel.TotalVolume * cm3ToMm3Ratio,
+                Weight: calculationLogModel.TotalWeight * kgToGramsRatio),
+            Price: calculationLogModel.Price
         );
     }
 
-    public static async Task<IReadOnlyList<GetHistoryResponse>> MapModelsToResponses(this IReadOnlyList<CalculateLogModel> calculateLogModels)
+    public static async Task<IReadOnlyList<GetHistoryResponse>> MapModelsToResponses(this IReadOnlyList<CalculationLogModel> calculationLogModels)
     {
-        return await Task.FromResult(calculateLogModels.Select(m => m.MapModelToResponse()).ToList());
+        return await Task.FromResult(calculationLogModels.Select(m => m.MapModelToResponse()).ToList());
     }
 }

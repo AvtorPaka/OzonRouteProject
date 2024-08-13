@@ -5,6 +5,7 @@ using OzonRoute.Api.Responses.V1;
 using OzonRoute.Api.Responses.V1.Extensions;
 using OzonRoute.Domain.Services.Interfaces;
 using OzonRoute.Domain.Models;
+using OzonRoute.Api.Responses.Errors;
 
 namespace OzonRoute.Api.Controllers.V1;
 
@@ -28,12 +29,16 @@ public class V1DeliveryPriceController : ControllerBase
         CancellationToken cancellationToken)
     {
         var requestModel = await request.MapRequestToModelsContainer();
-        double resultPrice = await _priceCalculatorService.CalculatePrice(requestModel, cancellationToken);
+        var saveCalculationsModel = await _priceCalculatorService.CalculatePrice(requestModel, cancellationToken);
+        double resultPrice = (double)saveCalculationsModel.Price;
 
-        await reportsService.CalculateNewReportData(
-            goods: requestModel.Goods,
-            distance: requestModel.Distance,
-            finalPrice: resultPrice,
+        await _priceCalculatorService.SaveCalculationsData(
+            saveModel: saveCalculationsModel,
+            token: cancellationToken
+        );
+
+        await reportsService.UpdateReportData(
+            saveModel: saveCalculationsModel,
             cancellationToken: cancellationToken
         );
 
@@ -45,34 +50,49 @@ public class V1DeliveryPriceController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
     public async Task<IActionResult> GetHistory([FromQuery] GetHistoryRequest request, CancellationToken cancellationToken)
     {
-        IReadOnlyList<CalculateLogModel> log = await _priceCalculatorService.QueryLog(
-            model: new GetHistoryModel(request.Take),
-            cancellationToken);
+        IReadOnlyList<CalculationLogModel> log = await _priceCalculatorService.QueryLog(
+            model: new GetHistoryModel(
+                UserId: request.UserId,
+                Take: request.Take,
+                Skip: request.Skip
+            ),
+            cancellationToken: cancellationToken);
+
         IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();
 
         return Ok(response);
     }
 
-    [HttpDelete]
-    [Route("delete-history")]
-    [ProducesResponseType(200)]
-    public async Task<IActionResult> DeleteHistory(CancellationToken cancellationToken)
+    [HttpGet]
+    [Route("get-history/by-ids")]
+    [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
+    [ProducesResponseType(typeof(WrongCalculationIdsResponse), 403)]
+    public async Task<IActionResult> GetHistoryByIds([FromQuery] GetHistoryByIdsRequest request, CancellationToken cancellationToken)
     {
-        await Task.Delay(TimeSpan.FromMilliseconds(1), cancellationToken); //Fiction
-        _priceCalculatorService.ClearLog();
-        return Ok();
+        IReadOnlyList<CalculationLogModel> calculationHistory = await _priceCalculatorService.QueryLogByIds(
+            new GetHistoryByIdsModel(
+                UserId: request.UserId,
+                CalculationIds: request.CalculationIds ?? []
+            ),
+            cancellationToken: cancellationToken
+        );
+
+        IReadOnlyList<GetHistoryResponse> result = await calculationHistory.MapModelsToResponses();
+
+        return Ok(result);
     }
 
-    [HttpGet]
-    [Route("reports/01")]
-    [ProducesResponseType(typeof(ReportsResponse), 200)]
-    public async Task<IActionResult> Reports(
-        [FromServices] IReportsService reportsService,
-        CancellationToken cancellationToken)
+    [HttpDelete]
+    [Route("clear-history")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(typeof(WrongCalculationIdsResponse), 403)]
+    public async Task<IActionResult> DeleteHistory(ClearHistoryRequest request, CancellationToken cancellationToken)
     {
-        ReportModel reportModel = await  reportsService.GetReport(cancellationToken);
-        ReportsResponse reportsResponse = await reportModel.MapModelToResponse();
+        await _priceCalculatorService.ClearHistoryLog(
+            model: request.MapRequestToModel(),
+            cancellationToken: cancellationToken
+        );
 
-        return Ok(reportsResponse);
+        return Ok();
     }
 }

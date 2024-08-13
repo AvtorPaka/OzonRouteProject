@@ -4,6 +4,6 @@ namespace OzonRoute.Infrastructure.External.Services.Interfaces;
 
 public interface IGoodsDetachedService
 {
-    public Task<IEnumerable<GoodEntity>> GetGoodsFromDetached(CancellationToken cancellationToken);
+    public Task<IEnumerable<StorageGoodEntity>> GetGoodsFromDetached(CancellationToken cancellationToken);
 
 }

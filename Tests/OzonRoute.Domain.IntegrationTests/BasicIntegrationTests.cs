@@ -1,9 +1,9 @@
 using AutoFixture;
-using Castle.Components.DictionaryAdapter.Xml;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using OzonRoute.Api.Controllers.V1;
 using OzonRoute.Api.Responses.V1;
+using OzonRoute.Domain.IntegrationTests.Fixtures;
 using OzonRoute.Domain.Services.Interfaces;
 using Xunit.Abstractions;
 
@@ -46,7 +46,13 @@ public sealed class BasicIntegrationTests
         var response = await contorller.Calculate(repository, request, cts.Token);
 
         //Assert
-        var actionResult = await contorller.GetHistory(new Api.Requests.V1.GetHistoryRequest(Take: int.MaxValue), cts.Token);
+        var actionResult = await contorller.GetHistory(
+            new Api.Requests.V1.GetHistoryRequest(
+                UserId: 1,
+                Take: int.MaxValue,
+                Skip: 0
+                ),
+             cts.Token);
         var objectResult = actionResult as ObjectResult;
 
         Assert.NotNull(objectResult);
@@ -56,21 +62,21 @@ public sealed class BasicIntegrationTests
     }
 
     [Fact]
-    public async Task App_V1DeliveryPrice_ShouldUpdateReports()
+    public async Task App_V1DeliveryPrice_ShouldUpdateGlobalReports()
     {
         //Arrange
         var cts = new CancellationTokenSource();
         var app = new AppFixture();
         var request = new Fixture().Build<Api.Requests.V1.CalculateRequest>().Create();
-        var contorller = app.Services.GetRequiredService<V1DeliveryPriceController>();
-        var repository = app.Services.GetRequiredService<IReportsService>();
+        var priceContorller = app.Services.GetRequiredService<V1DeliveryPriceController>();
+        var reportsController = app.Services.GetRequiredService<V1DeliveryReportsController>();
         var reportsService = app.Services.GetRequiredService<IReportsService>();
 
         //Act
-        var response = await contorller.Calculate(repository, request, cts.Token);
+        var response = await priceContorller.Calculate(reportsService, request, cts.Token);
 
         //Assert
-        var actionResult = await contorller.Reports(reportsService, cts.Token);
+        var actionResult = await reportsController.GetReportsGlobal(cts.Token);
         var objectResult = actionResult as ObjectResult;
 
         Assert.NotNull(objectResult);

@@ -20,18 +20,21 @@ public sealed class Startup
     }
 
     public void ConfigureServices(IServiceCollection services)
-    {
+    {   
         services
             .AddDomain(_configuration)
-            .AddInfrastructure()
+            .AddDalInfrastucture(_configuration)
+            .AddInfrastructureServices()
+            .AddDalRepositories()
             .AddControllers()
+            .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower)
             .AddMvcOptions(ConfigureMvc)
             .Services
             .AddEndpointsApiExplorer()
             .AddSwaggerGen(o => o.CustomSchemaIds(x => x.FullName))
             .AddHostedService<GoodsSyncHostedService>()
             .AddHttpContextAccessor()
-            .AddMvc().AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
+            .AddControllersWithViews().AddRazorRuntimeCompilation();
     }
 
     private static void ConfigureMvc(MvcOptions o)
@@ -44,13 +47,11 @@ public sealed class Startup
 
     public void Configure(IApplicationBuilder app)
     {
-        // if (_env.IsDevelopment())
-        // {
-        // }
         app.UseSwagger();
         app.UseSwaggerUI();
 
         app.UseRouting();
+        
         //Buffering for logging requests data
         app.Use(async (context, next) =>
         {
@@ -62,8 +63,8 @@ public sealed class Startup
         {
             endpoints.MapControllers();
             endpoints.MapControllerRoute(
-                name: "v1/goods/veiew",
-                pattern: "v1/goods/view",
+                name: "v1/storage/goods/view",
+                pattern: "v1/storage/goods/view",
                 defaults: new
                 {
                     Controller = "V1GoodsView",

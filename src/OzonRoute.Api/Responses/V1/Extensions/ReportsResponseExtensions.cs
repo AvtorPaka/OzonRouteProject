@@ -1,17 +1,20 @@
 using OzonRoute.Domain.Models;
+using OzonRoute.Domain.Models.Extensions;
 
 namespace OzonRoute.Api.Responses.V1.Extensions;
 
 public static class ReportsResponseExtensions
 {
-    public static async Task<ReportsResponse> MapModelToResponse(this ReportModel reportModel)
+    public static ReportsResponse MapModelToResponse(this ReportModel reportModel)
     {
-        return await Task.FromResult(new ReportsResponse(
+        return new ReportsResponse(
             MaxWeight: reportModel.MaxWeight,
             MaxVolume: reportModel.MaxVolume,
             MaxDistanceForHeaviestGood: reportModel.MaxDistanceForHeaviestGood,
             MaxDistanceForLargestGood: reportModel.MaxDistanceForLargestGood,
-            WavgPrice: reportModel.WavgPrice
-        ));
+            TotalNumberOfGoods: reportModel.TotalNumberOfGoods,
+            SummaryPrice: reportModel.SummaryPrice,
+            WavgPrice: reportModel.GetWavgPrice()
+        );
     }
 }

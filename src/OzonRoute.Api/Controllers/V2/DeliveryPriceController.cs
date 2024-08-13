@@ -5,6 +5,7 @@ using OzonRoute.Api.Responses.V2;
 using OzonRoute.Api.Responses.V2.Extensions;
 using OzonRoute.Domain.Services.Interfaces;
 using OzonRoute.Domain.Models;
+using OzonRoute.Api.Responses.Errors;
 
 namespace OzonRoute.Api.Controllers.V2;
 
@@ -28,12 +29,16 @@ public class V2DeliveryPriceController : ControllerBase
         CancellationToken cancellationToken)
     {
         var requestModel = await request.MapRequestToModelsContainer();
-        double resultPrice = await _priceCalculatorService.CalculatePrice(requestModel, cancellationToken);
+        var saveCalculationsModel = await _priceCalculatorService.CalculatePrice(requestModel, cancellationToken);
+        double resultPrice = (double)saveCalculationsModel.Price;
 
-        await reportsService.CalculateNewReportData(
-            goods: requestModel.Goods,
-            distance: requestModel.Distance,
-            finalPrice: resultPrice,
+        await _priceCalculatorService.SaveCalculationsData(
+            saveModel: saveCalculationsModel,
+            token: cancellationToken
+        );
+
+        await reportsService.UpdateReportData(
+            saveModel: saveCalculationsModel,
             cancellationToken: cancellationToken
         );
 
@@ -45,11 +50,34 @@ public class V2DeliveryPriceController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
     public async Task<IActionResult> GetHistory([FromQuery] GetHistoryRequest request, CancellationToken cancellationToken)
     {
-        IReadOnlyList<CalculateLogModel> log = await _priceCalculatorService.QueryLog(
-            model: new GetHistoryModel(request.Take),
+        IReadOnlyList<CalculationLogModel> log = await _priceCalculatorService.QueryLog(
+            model: new GetHistoryModel(
+                UserId: request.UserId,
+                Take: request.Take,
+                Skip: request.Skip
+            ),
             cancellationToken);
         IReadOnlyList<GetHistoryResponse> response = await log.MapModelsToResponses();
 
         return Ok(response);
+    }
+
+    [HttpGet]
+    [Route("get-history/by-ids")]
+    [ProducesResponseType(typeof(IEnumerable<GetHistoryResponse>), 200)]
+    [ProducesResponseType(typeof(WrongCalculationIdsResponse), 403)]
+    public async Task<IActionResult> GetHistoryByIds([FromQuery] GetHistoryByIdsRequest request, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<CalculationLogModel> calculationHistory = await _priceCalculatorService.QueryLogByIds(
+            new GetHistoryByIdsModel(
+                UserId: request.UserId,
+                CalculationIds: request.CalculationIds ?? []
+            ),
+            cancellationToken: cancellationToken
+        );
+
+        IReadOnlyList<GetHistoryResponse> result = await calculationHistory.MapModelsToResponses();
+
+        return Ok(result);
     }
 }

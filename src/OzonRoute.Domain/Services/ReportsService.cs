@@ -1,5 +1,6 @@
 using OzonRoute.Domain.Models;
 using OzonRoute.Domain.Models.Extensions;
+using OzonRoute.Domain.Services.Extensions;
 using OzonRoute.Domain.Services.Interfaces;
 using OzonRoute.Domain.Shared.Data.Entities;
 using OzonRoute.Domain.Shared.Data.Interfaces;
@@ -14,41 +15,101 @@ internal sealed class ReportsService : IReportsService
     {
         _reportsRepository = reportsRepository;
     }
-    
-    public async Task<ReportModel> GetReport(CancellationToken cancellationToken)
+
+    public async Task UpdateReportData(SaveCalculationModel saveModel, CancellationToken cancellationToken)
+    {   
+        var tasks = new List<Task>()
+        {
+            UpdatePersonalReportData(saveModel, cancellationToken),
+            UpdateGlobalReportData(saveModel, cancellationToken)
+        };
+
+        await TaskExt.WhenAll(tasks);
+    }
+
+    private async Task UpdatePersonalReportData(SaveCalculationModel saveModel, CancellationToken cancellationToken)
     {
-        ReportEntity reportEntity = await _reportsRepository.GetReportData(cancellationToken);
-        ReportModel reportModel = await reportEntity.MapEntityToModel();
+        long userId = saveModel.GoodsContainer.UserId;
 
-        return reportModel;
+        var reportModel = (await _reportsRepository.Get(
+            userId: userId,
+            cancellationToken: cancellationToken
+        )).MapEntityToModel(userId);
+
+        UpdateMaxWeightAndVolume(
+            model: reportModel,
+            goods: saveModel.GoodsContainer.Goods,
+            distance: saveModel.GoodsContainer.Distance
+        );
+
+        UpdateWavgPrice(
+            model: reportModel,
+            addPrice: (double)saveModel.Price,
+            addCount: saveModel.GoodsContainer.Goods.Count
+        );
+
+        await _reportsRepository.AddOrUpdate(
+            entity: reportModel.MapModelToEntity(),
+            cancellationToken: cancellationToken
+        );
     }
 
-    public async Task CalculateNewReportData(IReadOnlyList<GoodModel> goods, int distance, double finalPrice, CancellationToken cancellationToken)
-    {   
-        await CalculateNewMaxVolumeAndDistance(goods, distance, cancellationToken);
-        await CalculateNewMaxWeightAndDistance(goods, distance, cancellationToken);
-        _reportsRepository.UpdateWavgPrice(finalPrice, goods.Count);
+    private async Task UpdateGlobalReportData(SaveCalculationModel saveModel ,CancellationToken cancellationToken)
+    {
+        var reportModel = (await _reportsRepository.Get(
+            userId: -1,
+            cancellationToken: cancellationToken
+        )).MapEntityToModel(-1);
+
+        UpdateMaxWeightAndVolume(
+            model: reportModel,
+            goods: saveModel.GoodsContainer.Goods,
+            distance: saveModel.GoodsContainer.Distance
+        );
+
+        UpdateWavgPrice(
+            model: reportModel,
+            addPrice: (double)saveModel.Price,
+            addCount: saveModel.GoodsContainer.Goods.Count
+        );
+
+        await _reportsRepository.AddOrUpdate(
+            entity: reportModel.MapModelToEntity(),
+            cancellationToken: cancellationToken
+        );
     }
 
-    private async Task CalculateNewMaxWeightAndDistance(IReadOnlyCollection<GoodModel> goods, int distance, CancellationToken cancellationToken)
-    {   
-        ReportEntity currentReport = await _reportsRepository.GetReportData(cancellationToken);
-
-        double maxCurrentWeight = goods.Max(e => e.Weight);
-        if (maxCurrentWeight > currentReport.MaxWeight)
+    private static void UpdateMaxWeightAndVolume(ReportModel model, IEnumerable<DeliveryGoodModel> goods, int distance)
+    {
+        double maxWeight = goods.Max(x => x.Weight);
+        if (maxWeight >= model.MaxWeight)
         {
-            _reportsRepository.UpdateMaxWeightAndDistance(maxCurrentWeight, distance);
+            model.MaxWeight = maxWeight;
+            model.MaxDistanceForHeaviestGood = Math.Max(model.MaxDistanceForHeaviestGood, distance);
+        }
+
+        double maxVolume = goods.Max(x => x.CalculateVolume());
+        if (maxVolume >= model.MaxVolume)
+        {
+            model.MaxVolume = maxVolume;
+            model.MaxDistanceForLargestGood = Math.Max(model.MaxDistanceForLargestGood, distance);
         }
     }
 
-    private async Task CalculateNewMaxVolumeAndDistance(IReadOnlyCollection<GoodModel> goods, int distance, CancellationToken cancellationToken)
-    {   
-        ReportEntity currentReport = await _reportsRepository.GetReportData(cancellationToken);
+    private static void UpdateWavgPrice(ReportModel model, double addPrice, int addCount)
+    {
+        model.SummaryPrice += addPrice;
+        model.TotalNumberOfGoods += addCount;
+    }
 
-        double maxCurrentVolume = goods.Max(e => e.CalculateVolume());
-        if (maxCurrentVolume > currentReport.MaxVolume)
-        {
-            _reportsRepository.UpdateMaxVolumeAndDistance(maxCurrentVolume, distance);
-        }
+    public async Task<ReportModel> GetReport(long userId, CancellationToken cancellationToken)
+    {
+        var reportEntity = await _reportsRepository.Get(userId, cancellationToken);
+        return reportEntity.MapEntityToModel(userId); 
+    }
+
+    public async Task ClearReportData(long userId, CancellationToken cancellationToken)
+    {
+        await _reportsRepository.Delete(userId, cancellationToken);
     }
 }

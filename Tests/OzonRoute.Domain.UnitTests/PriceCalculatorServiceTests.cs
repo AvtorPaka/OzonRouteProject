@@ -1,11 +1,9 @@
+using System.Transactions;
 using AutoFixture;
-using Moq;
-using OzonRoute.Domain.Configuration.Models;
 using OzonRoute.Domain.Exceptions.Domain;
 using OzonRoute.Domain.Models;
-using OzonRoute.Domain.Services;
-using OzonRoute.Domain.Shared.Data.Entities;
-using OzonRoute.Domain.Shared.Data.Interfaces;
+using OzonRoute.Domain.UnitTests.Builders;
+using OzonRoute.Domain.UnitTests.Extensions;
 
 namespace OzonRoute.Domain.UnitTests;
 
@@ -16,72 +14,53 @@ public class PriceCalculatorServiceTests
     {
         //Arrange
         var cts = new CancellationTokenSource();
-        var options = new PriceCalculatorOptions() { VolumeToPriceRatio = 1, WeightToPriceRatio = 1 };
-        var goodPriceRepositoryMock = new Mock<IGoodPriceRepository>();
+        var builder = new PriceCalculatorServiceBuilder();
 
-        var cut = new PriceCalculatorService(
-            options: options,
-            goodPriceRepository: goodPriceRepositoryMock.Object
-        );
+        var cut = builder.Build();
 
         //Act, Assert
         await Assert.ThrowsAsync<DomainException>(async () => await cut.CalculatePrice(
-            new GoodModelsContainer(
-            Goods: Array.Empty<GoodModel>().ToList(),
+            new DeliveryGoodsContainer(
+            UserId: 1,
+            Goods: Array.Empty<DeliveryGoodModel>().ToList(),
             Distance: 1000),
             cancellationToken: cts.Token));
     }
 
-    public static IEnumerable<object[]> CalculatePriceByVolumeMemberData
-    {
-        get
-        {
-            yield return new object[] {
-            new GoodModelsContainer(
-                Goods: new List<GoodModel>() {new GoodModel(
-                    Lenght: 10,
-                    Width: 10,
-                    Height: 10,
-                    Weight: 2
-                )},
-                Distance: 1000), 1000};
-
-            yield return new object[] {
-            new GoodModelsContainer(
-                Goods: new List<GoodModel>() {new GoodModel(
-                    Lenght: 20,
-                    Width: 20,
-                    Height: 20,
-                    Weight: 2
-                )},
-                Distance: 1000), 8000};
-        }
-    }
-
     [Theory]
     [MemberData(nameof(CalculatePriceByVolumeMemberData))]
-    public async void CalculatePrice_WhenCalculatePriceByVolume_Succes(GoodModelsContainer modelsContainer, double expected)
+    public async void CalculatePrice_WhenCalculatePriceByVolume_Succes(DeliveryGoodsContainer modelsContainer, double expected)
     {
         //Arrange
         var cts = new CancellationTokenSource();
-        var options = new PriceCalculatorOptions() { VolumeToPriceRatio = 1, WeightToPriceRatio = 1 };
-        var goodPriceRepositoryMock = new Mock<IGoodPriceRepository>(MockBehavior.Strict);
-        
-        goodPriceRepositoryMock.Setup(x => x.Save(It.IsAny<GoodPriceEntity>()));
+        var builder = new PriceCalculatorServiceBuilder();
 
-        var cut = new PriceCalculatorService(
-            options: options,
-            goodPriceRepository: goodPriceRepositoryMock.Object
-        );
+        // builder.CalculationsRepository
+        //     .SetupAddCalculations()
+        //     .SetupCreateTransactionScope();
+            
+        // builder.CalculationGoodsRepository
+        //     .SetupAddCalculationGoods();
+
+        var cut = builder.Build();
 
         //Act
-        double result = await cut.CalculatePrice(
-            goodModelsContainer: modelsContainer,
+        var saveModel = await cut.CalculatePrice(
+            deliveryGoodsContainer: modelsContainer,
             cancellationToken: cts.Token);
+
+        double result = (double)saveModel.Price;
 
         //Assert
         Assert.Equal(expected, result);
-        goodPriceRepositoryMock.Verify(x => x.Save(It.IsAny<GoodPriceEntity>()));
+
+        // cut.CalculationsRepository
+        //     .VerifyAddCalculationsWasCalledOnce()
+        //     .VerifyCreateTransactionScopeWasCalledOnce(IsolationLevel.ReadCommitted);
+        // cut.CalculationGoodsRepository.
+        //     VerifyAddCalculationGoodsWasCalledOnce();
+
+        cut.VerifyNoOtherCalls();
     }
 
     [Theory]
@@ -91,20 +70,22 @@ public class PriceCalculatorServiceTests
     {
         //Arrange
         var cts = new CancellationTokenSource();
-        var options = new PriceCalculatorOptions() { VolumeToPriceRatio = 1, WeightToPriceRatio = 1 };
-        var goodPriceRepositoryMock = new Mock<IGoodPriceRepository>(MockBehavior.Strict);
+        var builder = new PriceCalculatorServiceBuilder();
 
-        goodPriceRepositoryMock.Setup(x => x.Save(It.IsAny<GoodPriceEntity>()));
+        // builder.CalculationsRepository
+        //     .SetupAddCalculations()
+        //     .SetupCreateTransactionScope();
+            
+        // builder.CalculationGoodsRepository
+        //     .SetupAddCalculationGoods();
 
-        var cut = new PriceCalculatorService(
-            options: options,
-            goodPriceRepository: goodPriceRepositoryMock.Object
-        );
+        var cut = builder.Build();
 
         //Act
-        double result = await cut.CalculatePrice(
-            new GoodModelsContainer(
-            Goods: new List<GoodModel>() {new GoodModel(
+        var saveModel = await cut.CalculatePrice(
+            new DeliveryGoodsContainer(
+            UserId: 1,
+            Goods: new List<DeliveryGoodModel>() {new DeliveryGoodModel(
                 Lenght: 10,
                 Width: 10,
                 Height: 10,
@@ -113,9 +94,18 @@ public class PriceCalculatorServiceTests
             Distance: 1000),
             cancellationToken: cts.Token);
 
+        double result = (double)saveModel.Price;
+
         //Assert
         Assert.Equal(expected, result);
-        goodPriceRepositoryMock.Verify(x => x.Save(It.IsAny<GoodPriceEntity>()));
+        
+        // cut.CalculationsRepository
+        //     .VerifyAddCalculationsWasCalledOnce()
+        //     .VerifyCreateTransactionScopeWasCalledOnce(IsolationLevel.ReadCommitted);
+        // cut.CalculationGoodsRepository.
+        //     VerifyAddCalculationGoodsWasCalledOnce();
+
+        cut.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -123,22 +113,62 @@ public class PriceCalculatorServiceTests
     {
         //Arrange
         var cts = new CancellationTokenSource();
-        var options = new PriceCalculatorOptions() { VolumeToPriceRatio = 1, WeightToPriceRatio = 1 };
-        var goodPriceRepositoryMock = new Mock<IGoodPriceRepository>(MockBehavior.Strict);
+        DeliveryGoodsContainer modelsContainer = new Fixture().Build<DeliveryGoodsContainer>().With(x => x.Distance, 1000).Create();
 
-        goodPriceRepositoryMock.Setup(x => x.Save(It.IsAny<GoodPriceEntity>()));
+        var builder = new PriceCalculatorServiceBuilder();
 
-        GoodModelsContainer modelsContainer = new Fixture().Build<GoodModelsContainer>().With(x => x.Distance, 1000).Create();
+        // builder.CalculationsRepository
+        //     .SetupAddCalculations()
+        //     .SetupCreateTransactionScope();
+            
+        // builder.CalculationGoodsRepository
+        //     .SetupAddCalculationGoods();
 
-        var cut = new PriceCalculatorService(
-            options: options,
-            goodPriceRepository: goodPriceRepositoryMock.Object
-        );
+        var cut = builder.Build();
 
-        //Act and Assert
-        double result = await cut.CalculatePrice(
-            goodModelsContainer: modelsContainer,
+        //Act
+        var saveModel = await cut.CalculatePrice(
+            deliveryGoodsContainer: modelsContainer,
             cancellationToken: cts.Token);
-        goodPriceRepositoryMock.Verify(x => x.Save(It.IsAny<GoodPriceEntity>()));
+
+        double result = (double)saveModel.Price;
+
+        //Assert
+        
+        // cut.CalculationsRepository
+        //     .VerifyAddCalculationsWasCalledOnce()
+        //     .VerifyCreateTransactionScopeWasCalledOnce(IsolationLevel.ReadCommitted);
+        // cut.CalculationGoodsRepository.
+        //     VerifyAddCalculationGoodsWasCalledOnce();
+
+        cut.VerifyNoOtherCalls();
+    }
+
+    public static IEnumerable<object[]> CalculatePriceByVolumeMemberData
+    {
+        get
+        {
+            yield return new object[] {
+            new DeliveryGoodsContainer(
+                UserId: 1,
+                Goods: new List<DeliveryGoodModel>() {new DeliveryGoodModel(
+                    Lenght: 10,
+                    Width: 10,
+                    Height: 10,
+                    Weight: 2
+                )},
+                Distance: 1000), 1000};
+
+            yield return new object[] {
+            new DeliveryGoodsContainer(
+                UserId: 1,
+                Goods: new List<DeliveryGoodModel>() {new DeliveryGoodModel(
+                    Lenght: 20,
+                    Width: 20,
+                    Height: 20,
+                    Weight: 2
+                )},
+                Distance: 1000), 8000};
+        }
     }
 }

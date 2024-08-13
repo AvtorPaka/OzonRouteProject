@@ -6,31 +6,34 @@ using OzonRoute.Domain.Shared.Data.Interfaces;
 using OzonRoute.Domain.Configuration.Models;
 using OzonRoute.Domain.Validators;
 using FluentValidation;
-using OzonRoute.Domain.Exceptions;
 using OzonRoute.Domain.Exceptions.Domain;
+using OzonRoute.Domain.Exceptions.Infrastructure;
 
 namespace OzonRoute.Domain.Services;
 
-internal sealed class PriceCalculatorService : IPriceCalculatorService
+internal class PriceCalculatorService : IPriceCalculatorService
 {
     private readonly double _volumeToPriceRatio;
     private readonly double _weightToPriceRatio;
-    private readonly IGoodPriceRepository _goodPriceRepository;
+    private readonly ICalculationsRepository _calculationsRepository;
+    private readonly ICalculationGoodsRepository  _calculationGoodsRepository;
 
     public PriceCalculatorService(
         PriceCalculatorOptions options,
-        IGoodPriceRepository goodPriceRepository)
+        ICalculationsRepository calculationsRepository,
+        ICalculationGoodsRepository calculationGoodsRepository)
     {
         _volumeToPriceRatio = options.VolumeToPriceRatio;
         _weightToPriceRatio = options.WeightToPriceRatio;
-        _goodPriceRepository = goodPriceRepository;
+        _calculationsRepository = calculationsRepository;
+        _calculationGoodsRepository = calculationGoodsRepository;
     }
 
-    public async Task<double> CalculatePrice(GoodModelsContainer goodModelsContainer, CancellationToken cancellationToken)
+    public async Task<SaveCalculationModel> CalculatePrice(DeliveryGoodsContainer deliveryGoodsContainer, CancellationToken cancellationToken)
     {   
         try
         {
-            return await CalculatePriceUnsafe(goodModelsContainer, cancellationToken);
+            return await CalculatePriceUnsafe(deliveryGoodsContainer, cancellationToken);
         }
         catch (ValidationException ex)
         {
@@ -38,24 +41,48 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         }
     }
 
-    private async Task<double> CalculatePriceUnsafe(GoodModelsContainer goodModelsContainer, CancellationToken cancellationToken)
+    private async Task<SaveCalculationModel> CalculatePriceUnsafe(DeliveryGoodsContainer deliveryGoodsContainer, CancellationToken cancellationToken)
     {
-        var validator = new GoodModelsContainerValidator();
-        await validator.ValidateAndThrowAsync(goodModelsContainer, cancellationToken);
+        var validator = new DeliveryGoodsContainerValidator();
+        await validator.ValidateAndThrowAsync(deliveryGoodsContainer, cancellationToken);
 
-        double finalPrice = CalculatePriceForOneMetr(goodModelsContainer.Goods , out double summaryVolume, out double summaryWeight) * goodModelsContainer.Distance;
+        double finalPrice = CalculatePriceForOneMetr(deliveryGoodsContainer.Goods
+                                                    ,out double summaryVolume
+                                                    ,out double summaryWeight) * deliveryGoodsContainer.Distance;
 
-        _goodPriceRepository.Save(new GoodPriceEntity(
-            Price: finalPrice,
-            Volume: summaryVolume, // In cm^3
-            Weight: summaryWeight,  // In gramms
-            Distance: goodModelsContainer.Distance, // In metrs
-            At: DateTime.UtcNow));
-
-        return finalPrice;
+        return new SaveCalculationModel(
+                GoodsContainer: deliveryGoodsContainer,
+                TotalVolume: summaryVolume,
+                TotalWeight: summaryWeight,
+                Price: (decimal)finalPrice,
+                At: DateTime.UtcNow
+            );
     }
 
-    private double CalculatePriceForOneMetr(IReadOnlyList<GoodModel> goods, out double summaryVolume, out double summaryWeight)
+    public async Task SaveCalculationsData(SaveCalculationModel saveModel, CancellationToken token)
+    {   
+        using var transaction = _calculationsRepository.CreateTransactionScope();
+
+        long[] calculationGoodsIds = await _calculationGoodsRepository.Add(
+            saveModel.GoodsContainer.Goods.MapModelsToEntities(saveModel.GoodsContainer.UserId) ,
+            token);
+
+        await _calculationsRepository.Add(
+            [new CalculationEntityV1{
+                UserId = saveModel.GoodsContainer.UserId,
+                GoodIds = calculationGoodsIds,
+                TotalVolume = saveModel.TotalVolume,
+                TotalWeight = saveModel.TotalWeight,
+                Price = saveModel.Price,
+                Distance = saveModel.GoodsContainer.Distance,
+                At = saveModel.At
+            }],
+            cancellationToken: token);
+
+        transaction.Complete();
+    }
+
+    private double CalculatePriceForOneMetr(IReadOnlyList<DeliveryGoodModel> goods, out double summaryVolume, out double summaryWeight)
     {
         double volumePrice = CalculatePriceByVolume(goods, out summaryVolume);
         double weightPrice = CalculatePriceByWeight(goods, out summaryWeight);
@@ -64,7 +91,7 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         return priceForOneMetr;
     }
 
-    private double CalculatePriceByVolume(IReadOnlyList<GoodModel> goods, out double summaryVolume)
+    private double CalculatePriceByVolume(IReadOnlyList<DeliveryGoodModel> goods, out double summaryVolume)
     {
         summaryVolume = goods.Sum(g => g.Lenght * g.Width * g.Height);
         double volumePrice = summaryVolume * _volumeToPriceRatio;
@@ -72,7 +99,7 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         return volumePrice;
     }
 
-    private double CalculatePriceByWeight(IReadOnlyList<GoodModel> goods, out double summaryWeight)
+    private double CalculatePriceByWeight(IReadOnlyList<DeliveryGoodModel> goods, out double summaryWeight)
     {
         summaryWeight = goods.Sum(g => g.Weight) * 1000.0d;
         double weightPrice = summaryWeight * _weightToPriceRatio / 1000.0d;
@@ -80,7 +107,7 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         return weightPrice;
     }
 
-    public async Task<IReadOnlyList<CalculateLogModel>> QueryLog(GetHistoryModel model, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<CalculationLogModel>> QueryLog(GetHistoryModel model, CancellationToken cancellationToken)
     {
         try
         {
@@ -92,19 +119,95 @@ internal sealed class PriceCalculatorService : IPriceCalculatorService
         }
     }
 
-    private async Task<IReadOnlyList<CalculateLogModel>> QueryLogUnsafe(GetHistoryModel model, CancellationToken cancellationToken)
+
+    private async Task<IReadOnlyList<CalculationLogModel>> QueryLogUnsafe(GetHistoryModel model, CancellationToken cancellationToken)
     {
         var validator = new GetHistoryModelValidator();
         await validator.ValidateAndThrowAsync(model, cancellationToken);
 
-        IReadOnlyList<GoodPriceEntity> log = await _goodPriceRepository.QueryData(cancellationToken);
-        IReadOnlyList<CalculateLogModel> processedLog = await log.OrderByDescending(g => g.At).Take(model.Take).MapEntitiesToModels();
+        IReadOnlyList<CalculationEntityV1> log = await _calculationsRepository.Query(model.MapModelToDalModel(), cancellationToken);
+        IReadOnlyList<CalculationLogModel> processedLog = await log.MapEntitiesToModels();
 
         return processedLog;
     }
 
-    public void ClearLog()
-    {
-        _goodPriceRepository.ClearData();
+    public async Task ClearHistoryLog(ClearHistoryModel model, CancellationToken cancellationToken)
+    {   
+        try
+        {
+            await ClearHistoryLogUnsafe(model, cancellationToken);
+        }
+        catch (ValidationException ex)
+        {
+            throw new DomainException("Invalid input data.", ex);
+        }
+        catch (OneOrManyCalculationsNotFoundException ex)
+        {   
+            throw new DomainException("Invalid input data.", ex);
+        }
+        catch (OneOrManyCalculationsBelongToAnotherUserException ex)
+        {
+            throw new WrongCalculationIdsException("Invalid input data.", ex);
+        }
+    }
+
+    private async Task ClearHistoryLogUnsafe(ClearHistoryModel model, CancellationToken cancellationToken)
+    {   
+        var validator = new ClearHistoryModelValidator();
+        await validator.ValidateAndThrowAsync(model, cancellationToken);
+
+        using var transaction = _calculationsRepository.CreateTransactionScope();
+
+        long[] calculationGoodIds = await _calculationsRepository.Clear(
+            userId: model.UserId,
+            calculationIds: model.CalculationIds.ToArray(),
+            cancellationToken: cancellationToken
+        );
+
+        if (calculationGoodIds.Length != 0)
+        {
+            await _calculationGoodsRepository.Clear(
+                userId: model.UserId,
+                calculationGoodIds: calculationGoodIds,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        transaction.Complete();
+    }
+
+    public async Task<IReadOnlyList<CalculationLogModel>> QueryLogByIds(GetHistoryByIdsModel model, CancellationToken cancellationToken)
+    {   
+        try
+        {
+            return await QueryLogByIdsUnsafe(model, cancellationToken);
+        }
+        catch (ValidationException ex)
+        {
+            throw new DomainException("Invalid input data.", ex);
+        }
+        catch (OneOrManyCalculationsBelongToAnotherUserException ex)
+        {
+            throw new WrongCalculationIdsException("Invalid input data", ex);
+        }
+        catch (OneOrManyCalculationsNotFoundException ex)
+        {
+            throw new DomainException("Invalid input data.", ex);
+        }
+    }
+
+    private async Task<IReadOnlyList<CalculationLogModel>> QueryLogByIdsUnsafe(GetHistoryByIdsModel model, CancellationToken cancellationToken)
+    {   
+        var validator = new GetHistoryByIdsModelValidator();
+        await validator.ValidateAndThrowAsync(model, cancellationToken);
+
+        IReadOnlyList<CalculationEntityV1> queriedCalculations = await _calculationsRepository.QueryByIds(
+            userId: model.UserId,
+            calculationIds: model.CalculationIds.ToArray(),
+            cancellationToken: cancellationToken
+        );
+
+        IReadOnlyList<CalculationLogModel> result = await queriedCalculations.MapEntitiesToModels();
+        return result;
     }
 }
