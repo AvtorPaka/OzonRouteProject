@@ -3,6 +3,7 @@ using OzonRoute.Domain.Models;
 namespace OzonRoute.Domain.Services.Interfaces;
 public interface IReportsService
 {
-    public Task<ReportModel> GetReport(CancellationToken cancellationToken);
-    public Task CalculateNewReportData(IReadOnlyList<DeliveryGoodModel> goods, int distance, double finalPrice, CancellationToken cancellationToken);
+    public Task<ReportModel> GetReport(long userId, CancellationToken cancellationToken);
+    public Task UpdateReportData(SaveCalculationModel saveModel, CancellationToken cancellationToken);
+    public Task ClearReportData(long userId, CancellationToken cancellationToken);
 }

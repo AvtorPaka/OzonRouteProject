@@ -1,17 +1,38 @@
 using OzonRoute.Domain.Shared.Data.Entities;
-using OzonRoute.Domain.Shared.Data.Entities.Extensions;
 
 namespace OzonRoute.Domain.Models.Extensions;
 public static class ReportModelExtensions
 {
-    public static async Task<ReportModel> MapEntityToModel(this ReportEntity reportEntity)
+    public static ReportModel MapEntityToModel(this ReportEntity reportEntity, long userId)
     {
-        return await Task.FromResult(new ReportModel(
-            MaxWeight: reportEntity.MaxWeight,
-            MaxVolume: reportEntity.MaxVolume,
-            MaxDistanceForHeaviestGood: reportEntity.MaxDistanceForHeaviestGood,
-            MaxDistanceForLargestGood: reportEntity.MaxDistanceForLargestGood,
-            WavgPrice: reportEntity.GetWavgPrice()
-        ));
+        return new ReportModel(
+            userId: userId,
+            maxWeight: reportEntity.MaxWeight,
+            maxVolume: reportEntity.MaxVolume,
+            maxDistanceForHeaviestGood: reportEntity.MaxDistanceForHeaviestGood,
+            maxDistanceForLargestGood: reportEntity.MaxDistanceForLargestGood,
+            totalNumberOfGoods: reportEntity.TotalNumberOfGoods,
+            summaryPrice: reportEntity.SummaryPrice
+        );
+    }
+
+    public static ReportEntity MapModelToEntity(this ReportModel model)
+    {
+        return new ReportEntity()
+        {
+            UserId = model.UserId,
+            MaxWeight = model.MaxWeight,
+            MaxVolume = model.MaxVolume,
+            MaxDistanceForLargestGood = model.MaxDistanceForLargestGood,
+            MaxDistanceForHeaviestGood = model.MaxDistanceForHeaviestGood,
+            TotalNumberOfGoods = model.TotalNumberOfGoods,
+            SummaryPrice = model.SummaryPrice
+        };
+    }
+
+    public static double GetWavgPrice(this ReportModel model)
+    {
+        return model.TotalNumberOfGoods == 0 ? 0 :
+                                                model.SummaryPrice / model.TotalNumberOfGoods;
     }
 }

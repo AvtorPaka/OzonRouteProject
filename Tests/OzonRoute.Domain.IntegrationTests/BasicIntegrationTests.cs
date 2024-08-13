@@ -62,21 +62,21 @@ public sealed class BasicIntegrationTests
     }
 
     [Fact]
-    public async Task App_V1DeliveryPrice_ShouldUpdateReports()
+    public async Task App_V1DeliveryPrice_ShouldUpdateGlobalReports()
     {
         //Arrange
         var cts = new CancellationTokenSource();
         var app = new AppFixture();
         var request = new Fixture().Build<Api.Requests.V1.CalculateRequest>().Create();
-        var contorller = app.Services.GetRequiredService<V1DeliveryPriceController>();
-        var repository = app.Services.GetRequiredService<IReportsService>();
+        var priceContorller = app.Services.GetRequiredService<V1DeliveryPriceController>();
+        var reportsController = app.Services.GetRequiredService<V1DeliveryReportsController>();
         var reportsService = app.Services.GetRequiredService<IReportsService>();
 
         //Act
-        var response = await contorller.Calculate(repository, request, cts.Token);
+        var response = await priceContorller.Calculate(reportsService, request, cts.Token);
 
         //Assert
-        var actionResult = await contorller.Reports(reportsService, cts.Token);
+        var actionResult = await reportsController.GetReportsGlobal(cts.Token);
         var objectResult = actionResult as ObjectResult;
 
         Assert.NotNull(objectResult);

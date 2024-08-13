@@ -37,10 +37,8 @@ public class V1DeliveryPriceController : ControllerBase
             token: cancellationToken
         );
 
-        await reportsService.CalculateNewReportData(
-            goods: requestModel.Goods,
-            distance: requestModel.Distance,
-            finalPrice: resultPrice,
+        await reportsService.UpdateReportData(
+            saveModel: saveCalculationsModel,
             cancellationToken: cancellationToken
         );
 
@@ -96,18 +94,5 @@ public class V1DeliveryPriceController : ControllerBase
         );
 
         return Ok();
-    }
-
-    [HttpGet]
-    [Route("reports/01")]
-    [ProducesResponseType(typeof(ReportsResponse), 200)]
-    public async Task<IActionResult> Reports(
-        [FromServices] IReportsService reportsService,
-        CancellationToken cancellationToken)
-    {
-        ReportModel reportModel = await reportsService.GetReport(cancellationToken);
-        ReportsResponse reportsResponse = await reportModel.MapModelToResponse();
-
-        return Ok(reportsResponse);
     }
 }

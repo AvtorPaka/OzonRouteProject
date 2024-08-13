@@ -1,4 +1,3 @@
-using OzonRoute.Infrastructure.Dal.Contexts;
 using OzonRoute.Domain.Shared.Data.Interfaces;
 using OzonRoute.Infrastructure.Dal.Repositories;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,24 +13,30 @@ public static class ServiceCollectionExtensions
 {   
     public static IServiceCollection AddDalInfrastucture(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<DeliveryPriceContext>();
-
         var postgreSqlSection = configuration.GetSection($"DalOptions:{nameof(PostgreSQLOptions)}");
-        services.Configure<PostgreSQLOptions>(postgreSqlSection);
+        var redisCacheSection = configuration.GetSection($"DalOptions:{nameof(RedisCacheOptions)}");
 
-        Postgres.AddDataSource(services, postgreSqlSection.GetValue<string>("ConnectionString") ?? throw new ArgumentNullException("PgSQL connection string is missing"));
-        Postgres.MapCompositeTypes();
+        var sqlOptions = postgreSqlSection.Get<PostgreSQLOptions>() ?? throw new ArgumentNullException("PostgreSQLOptions is missing.");
+        var redisOptions = redisCacheSection.Get<RedisCacheOptions>() ?? throw new ArgumentNullException("RedisCacheOptions is missing");
+
+        services.Configure<PostgreSQLOptions>(postgreSqlSection);
+        services.Configure<RedisCacheOptions>(redisCacheSection);
+        services.Configure<CacheExpirationOptions>(configuration.GetSection("CacheExpirationOptions"));
+
+        Postgres.AddDataSource(services, sqlOptions);
+        Postgres.ConfigureTypeMapOptions();
         Postgres.AddMigrations(services);
+
+        Redis.AddIDistributedCache(services, redisOptions);
         
         return services;
     }
     public static IServiceCollection AddDalRepositories(this IServiceCollection services)
     {
-        services.AddScoped<IReportsRepository, ReportsRepository>();
-
         services.AddScoped<ICalculationsRepository , CalculationsRepository>();
         services.AddScoped<ICalculationGoodsRepository, CalculationGoodsRepository>();
         services.AddScoped<IStorageGoodsRepository, StorageGoodsRepository>();
+        services.AddScoped<IReportsRepository, ReportsRepository>();
 
         return services;
     }

@@ -12,15 +12,15 @@ public static class Postgres
 {   
     private static readonly INpgsqlNameTranslator _translator = new NpgsqlSnakeCaseNameTranslator();
 
-    public static void MapCompositeTypes()
+    public static void ConfigureTypeMapOptions()
     {
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
 
-    public static void AddDataSource(IServiceCollection services, string connectionString)
+    public static void AddDataSource(IServiceCollection services, PostgreSQLOptions options)
     {   
         services.AddNpgsqlDataSource(
-            connectionString,
+            options.ConnectionString,
             builder => {
                 builder.MapComposite<CalculationEntityV1>("calculations_v1", _translator);
                 builder.MapComposite<CalculationGoodEntityV1>("calculation_goods_v1", _translator);

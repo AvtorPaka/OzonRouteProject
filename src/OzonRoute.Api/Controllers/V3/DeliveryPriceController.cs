@@ -37,10 +37,8 @@ public class V3DeliveryPriceController : ControllerBase
             token: cancellationToken
         );
 
-        await reportsService.CalculateNewReportData(
-            goods: requestModel.Goods,
-            distance: requestModel.Distance,
-            finalPrice: resultPrice,
+        await reportsService.UpdateReportData(
+            saveModel: saveCalculationsModel,
             cancellationToken: cancellationToken
         );
 
