@@ -46,13 +46,16 @@ public sealed class Startup
     }
 
     public void Configure(IApplicationBuilder app)
-    {
+    {   
+        
+        app.AddSerilogRequestLogging(); 
+
         app.UseSwagger();
         app.UseSwaggerUI();
 
         app.UseRouting();
         
-        //Buffering for logging requests data
+        // Buffering for logging requests data
         app.Use(async (context, next) =>
         {
             context.Request.EnableBuffering();

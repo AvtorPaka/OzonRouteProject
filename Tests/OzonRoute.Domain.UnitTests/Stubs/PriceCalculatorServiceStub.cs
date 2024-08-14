@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using OzonRoute.Domain.Configuration.Models;
 using OzonRoute.Domain.Services;
@@ -11,10 +13,11 @@ internal class PriceCalculatorServiceStub : PriceCalculatorService
     public Mock<ICalculationGoodsRepository> CalculationGoodsRepository {get; init;}
 
     public PriceCalculatorServiceStub(
-        PriceCalculatorOptions options
+        Mock<IOptionsSnapshot<PriceCalculatorOptions>> options
        ,Mock<ICalculationsRepository> calculationsRepository
-       ,Mock<ICalculationGoodsRepository> calculationGoodsRepository)
-     : base(options, calculationsRepository.Object, calculationGoodsRepository.Object)
+       ,Mock<ICalculationGoodsRepository> calculationGoodsRepository
+       ,Mock<ILogger<PriceCalculatorService>> logger)
+     : base(options.Object, calculationsRepository.Object, calculationGoodsRepository.Object, logger.Object)
     {
         CalculationGoodsRepository = calculationGoodsRepository;
         CalculationsRepository = calculationsRepository;

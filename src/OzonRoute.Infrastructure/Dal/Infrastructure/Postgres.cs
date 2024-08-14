@@ -41,6 +41,6 @@ public static class Postgres
                 return options.ConnectionString;
             })
             .ScanIn(typeof(Postgres).Assembly).For.Migrations())
-            .AddLogging(x => x.AddFluentMigratorConsole()); //Also duplicates default Microsoft.Logging, annoying
+            .AddLogging(x => x.AddFluentMigratorConsole());
     }
 }

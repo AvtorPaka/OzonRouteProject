@@ -10,7 +10,9 @@ public sealed class Program
         .ConfigureWebHostDefaults(webBuidler => webBuidler.UseStartup<Startup>())
         .ConfigureHostOptions(x => x.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
 
+
         await builder
+            .AddSerilog()
             .Build()
             .MigrateUp()
             .RunAsync();

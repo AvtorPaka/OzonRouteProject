@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using OzonRoute.Domain.Models;
 using OzonRoute.Domain.Models.Extensions;
 using OzonRoute.Domain.Services.Extensions;
@@ -11,9 +12,12 @@ internal sealed class ReportsService : IReportsService
 {   
     private readonly IReportsRepository _reportsRepository;
 
-    public ReportsService(IReportsRepository reportsRepository)
+    private readonly ILogger<ReportsService> _logger;
+
+    public ReportsService(IReportsRepository reportsRepository, ILogger<ReportsService> logger)
     {
         _reportsRepository = reportsRepository;
+        _logger = logger;
     }
 
     public async Task UpdateReportData(SaveCalculationModel saveModel, CancellationToken cancellationToken)
@@ -24,7 +28,7 @@ internal sealed class ReportsService : IReportsService
             UpdateGlobalReportData(saveModel, cancellationToken)
         };
 
-        await TaskExt.WhenAll(tasks);
+        await TaskExt.WhenAll(tasks, _logger);
     }
 
     private async Task UpdatePersonalReportData(SaveCalculationModel saveModel, CancellationToken cancellationToken)
