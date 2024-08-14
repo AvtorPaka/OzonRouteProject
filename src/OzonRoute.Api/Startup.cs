@@ -47,8 +47,8 @@ public sealed class Startup
 
     public void Configure(IApplicationBuilder app)
     {   
-        // Kinda bad
-        // app.AddSerilogRequestLogging(); 
+        
+        app.AddSerilogRequestLogging(); 
 
         app.UseSwagger();
         app.UseSwaggerUI();

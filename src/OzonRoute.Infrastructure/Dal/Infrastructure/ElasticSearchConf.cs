@@ -16,7 +16,9 @@ public static class ElasticSearchConf
             IndexFormat = $"{Assembly.GetExecutingAssembly().GetName().Name?.ToLower().Replace(".", "-")}-logs-{context.HostingEnvironment.EnvironmentName?.ToLower().Replace(".", "-")}-{DateTime.UtcNow:yyyy-MM}",
             AutoRegisterTemplate = true,
             NumberOfShards = 2,
-            NumberOfReplicas = 1
+            NumberOfReplicas = 1,
+            EmitEventFailure = EmitEventFailureHandling.RaiseCallback,
+            FailureCallback = (mes, exc) => Console.WriteLine($"Unable to submit event: {mes} | {exc}")
         };
     }
 }
