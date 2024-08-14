@@ -6,13 +6,16 @@ using OzonRoute.Infrastructure.External.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using OzonRoute.Infrastructure.Dal.Configuration;
 using OzonRoute.Infrastructure.Dal.Infrastructure;
+using Serilog;
 
 namespace OzonRoute.Infrastructure.Extensions;
 
 public static class ServiceCollectionExtensions
 {   
     public static IServiceCollection AddDalInfrastucture(this IServiceCollection services, IConfiguration configuration)
-    {
+    {   
+        services.AddSerilog();
+
         var postgreSqlSection = configuration.GetSection($"DalOptions:{nameof(PostgreSQLOptions)}");
         var redisCacheSection = configuration.GetSection($"DalOptions:{nameof(RedisCacheOptions)}");
 

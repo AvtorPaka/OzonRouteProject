@@ -19,9 +19,9 @@ public class GoodsSyncHostedService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation(">>GoodsSync Host Service start executting. | Date : {curDate}", DateTime.Now);
+        _logger.LogInformation(">>GoodsSync Host Service start executing");
 
-        using PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(45));
+        using PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(60));
         try
         {
             while (await periodicTimer.WaitForNextTickAsync(cancellationToken))
@@ -31,13 +31,13 @@ public class GoodsSyncHostedService : BackgroundService
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation(">>GoodsSync Host Service is stopped | Date : {curDate}", DateTime.Now);
+            _logger.LogInformation(">>GoodsSync Host Service is stopped");
         }
     }
 
     private async Task ProccesGoods(CancellationToken cancellationToken)
     {
-        _logger.LogInformation(">>GoodsSync Host Service start processing goods | Date : {curDate}", DateTime.Now);
+        _logger.LogInformation(">>GoodsSync Host Service start processing goods");
         using var scope = _serviceProvider.CreateAsyncScope();
 
         IGoodsDetachedService goodsDetachedService = scope.ServiceProvider.GetRequiredService<IGoodsDetachedService>();
@@ -46,6 +46,6 @@ public class GoodsSyncHostedService : BackgroundService
         var goods = await goodsDetachedService.GetGoodsFromDetached(cancellationToken);
         await goodsService.UpdateGoods(goods, cancellationToken);
 
-        _logger.LogInformation(">>GoodsSync Host Service stopped processing goods | Date : {curDate}", DateTime.Now);
+        _logger.LogInformation(">>GoodsSync Host Service stopped processing goods");
     }
 }

@@ -8,25 +8,30 @@ using OzonRoute.Domain.Validators;
 using FluentValidation;
 using OzonRoute.Domain.Exceptions.Domain;
 using OzonRoute.Domain.Exceptions.Infrastructure;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace OzonRoute.Domain.Services;
 
-internal class PriceCalculatorService : IPriceCalculatorService
+public class PriceCalculatorService : IPriceCalculatorService
 {
     private readonly double _volumeToPriceRatio;
     private readonly double _weightToPriceRatio;
     private readonly ICalculationsRepository _calculationsRepository;
     private readonly ICalculationGoodsRepository  _calculationGoodsRepository;
+    private readonly ILogger<PriceCalculatorService> _logger;
 
     public PriceCalculatorService(
-        PriceCalculatorOptions options,
+        IOptionsSnapshot<PriceCalculatorOptions> options,
         ICalculationsRepository calculationsRepository,
-        ICalculationGoodsRepository calculationGoodsRepository)
+        ICalculationGoodsRepository calculationGoodsRepository,
+        ILogger<PriceCalculatorService> logger)
     {
-        _volumeToPriceRatio = options.VolumeToPriceRatio;
-        _weightToPriceRatio = options.WeightToPriceRatio;
+        _volumeToPriceRatio = options.Value.VolumeToPriceRatio;
+        _weightToPriceRatio = options.Value.WeightToPriceRatio;
         _calculationsRepository = calculationsRepository;
         _calculationGoodsRepository = calculationGoodsRepository;
+        _logger = logger;
     }
 
     public async Task<SaveCalculationModel> CalculatePrice(DeliveryGoodsContainer deliveryGoodsContainer, CancellationToken cancellationToken)
@@ -36,7 +41,8 @@ internal class PriceCalculatorService : IPriceCalculatorService
             return await CalculatePriceUnsafe(deliveryGoodsContainer, cancellationToken);
         }
         catch (ValidationException ex)
-        {
+        {   
+            _logger.LogError(ex, "Invalid input data");
             throw new DomainException("Invalid input data", ex);
         }
     }
@@ -114,7 +120,8 @@ internal class PriceCalculatorService : IPriceCalculatorService
             return await QueryLogUnsafe(model, cancellationToken);
         }
         catch (ValidationException ex)
-        {
+        {   
+            _logger.LogError(ex, "Invalid input data");
             throw new DomainException("Invalid input data", ex);
         }
     }
@@ -138,15 +145,18 @@ internal class PriceCalculatorService : IPriceCalculatorService
             await ClearHistoryLogUnsafe(model, cancellationToken);
         }
         catch (ValidationException ex)
-        {
+        {   
+            _logger.LogError(ex, "Invalid input data");
             throw new DomainException("Invalid input data.", ex);
         }
         catch (OneOrManyCalculationsNotFoundException ex)
         {   
+            _logger.LogError(ex, "Invalid input data");
             throw new DomainException("Invalid input data.", ex);
         }
         catch (OneOrManyCalculationsBelongToAnotherUserException ex)
-        {
+        {   
+            _logger.LogError(ex, "Invalid input data");
             throw new WrongCalculationIdsException("Invalid input data.", ex);
         }
     }
@@ -183,15 +193,18 @@ internal class PriceCalculatorService : IPriceCalculatorService
             return await QueryLogByIdsUnsafe(model, cancellationToken);
         }
         catch (ValidationException ex)
-        {
+        {   
+            _logger.LogError(ex, "Invalid input data");
             throw new DomainException("Invalid input data.", ex);
         }
         catch (OneOrManyCalculationsBelongToAnotherUserException ex)
-        {
+        {   
+            _logger.LogError(ex, "Invalid input data");
             throw new WrongCalculationIdsException("Invalid input data", ex);
         }
         catch (OneOrManyCalculationsNotFoundException ex)
-        {
+        {   
+            _logger.LogError(ex, "Invalid input data");
             throw new DomainException("Invalid input data.", ex);
         }
     }

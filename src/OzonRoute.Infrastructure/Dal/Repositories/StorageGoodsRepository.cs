@@ -19,7 +19,11 @@ internal sealed class StorageGoodsRepository: BaseRepository, IStorageGoodsRepos
         var updatedGoodIds = await Update(entities, cancellationToken);
 
         StorageGoodEntity[] newEntitiesToAdd = entities.Where(x => !updatedGoodIds.Contains(x.Id)).ToArray();
-        await Add(newEntitiesToAdd, cancellationToken);
+
+        if (newEntitiesToAdd.Length != 0)
+        {
+            await Add(newEntitiesToAdd, cancellationToken);
+        }
     }
 
     private async Task Add(StorageGoodEntity[] entities, CancellationToken cancellationToken)

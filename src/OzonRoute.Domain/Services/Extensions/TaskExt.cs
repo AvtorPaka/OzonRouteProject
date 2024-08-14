@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace OzonRoute.Domain.Services.Extensions;
 
 public static class TaskExt
@@ -15,7 +17,7 @@ public static class TaskExt
         throw allTasks.Exception ?? throw new ArgumentNullException("Isn't even possible.");
     }
 
-    public static async Task WhenAll(IEnumerable<Task> tasks)
+    public static async Task WhenAll(IEnumerable<Task> tasks, ILogger logger)
     {
         var allTasks = Task.WhenAll(tasks);
 
@@ -26,7 +28,8 @@ public static class TaskExt
         catch (Exception) {}
 
         if (allTasks.Exception != null)
-        {
+        {   
+            logger.LogError(allTasks.Exception, "Invalid input data");
             throw allTasks.Exception;
         };
     }

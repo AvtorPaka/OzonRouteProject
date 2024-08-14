@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using OzonRoute.Domain.Exceptions.Domain;
 using OzonRoute.Domain.Exceptions.Infrastructure;
 using OzonRoute.Domain.Models;
@@ -13,9 +14,12 @@ internal sealed class StorageGoodsService : IStorageGoodsService
 {
     private readonly IStorageGoodsRepository _storageGoodsRepository;
 
-    public StorageGoodsService(IStorageGoodsRepository storageGoodsRepository)
+    private readonly ILogger<StorageGoodsService> _logger;
+
+    public StorageGoodsService(IStorageGoodsRepository storageGoodsRepository, ILogger<StorageGoodsService> logger)
     {
         _storageGoodsRepository = storageGoodsRepository;
+        _logger = logger;
     }
 
     public async Task<IReadOnlyList<StorageGoodModel>> QueryGoods(CancellationToken cancellationToken)
@@ -40,11 +44,13 @@ internal sealed class StorageGoodsService : IStorageGoodsService
             return await CalculateFullPriceUnsafe(priceCalculatorService, id, cancellationToken);
         }
         catch (ValidationException ex)
-        {
+        {   
+            _logger.LogError(ex, "Invalid input data");
             throw new DomainException("Invalid input data.", ex);
         }
         catch (EntityNotFoundException ex)
-        {
+        {   
+            _logger.LogError(ex, "Invalid input data");
             throw new DomainException("Invalid input data.", ex);
         }
     }
