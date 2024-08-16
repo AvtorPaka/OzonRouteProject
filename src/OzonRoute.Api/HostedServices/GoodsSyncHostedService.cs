@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OzonRoute.Domain.Services.Interfaces;
-using OzonRoute.Infrastructure.External.Services.Interfaces;
+using OzonRoute.Infrastructure.Dal.Infrastructure;
+using OzonRoute.Infrastructure.Services.Interfaces;
 
 namespace OzonRoute.Api.HostedServices;
 
@@ -21,7 +22,7 @@ public class GoodsSyncHostedService : BackgroundService
     {
         _logger.LogInformation(">>GoodsSync Host Service start executing");
 
-        using PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(60));
+        using PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(45));
         try
         {
             while (await periodicTimer.WaitForNextTickAsync(cancellationToken))
@@ -40,11 +41,13 @@ public class GoodsSyncHostedService : BackgroundService
         _logger.LogInformation(">>GoodsSync Host Service start processing goods");
         using var scope = _serviceProvider.CreateAsyncScope();
 
+        IOutputCacheEvictService outputCacheEvictService = scope.ServiceProvider.GetRequiredService<IOutputCacheEvictService>();
         IGoodsDetachedService goodsDetachedService = scope.ServiceProvider.GetRequiredService<IGoodsDetachedService>();
         IStorageGoodsService goodsService = scope.ServiceProvider.GetRequiredService<IStorageGoodsService>();
 
         var goods = await goodsDetachedService.GetGoodsFromDetached(cancellationToken);
         await goodsService.UpdateGoods(goods, cancellationToken);
+        await outputCacheEvictService.EvictOutputCache(TagType.V1StorageGoods, cancellationToken);
 
         _logger.LogInformation(">>GoodsSync Host Service stopped processing goods");
     }
