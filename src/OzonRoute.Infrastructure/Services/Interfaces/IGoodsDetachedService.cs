@@ -1,6 +1,6 @@
 using OzonRoute.Domain.Shared.Data.Entities;
 
-namespace OzonRoute.Infrastructure.External.Services.Interfaces;
+namespace OzonRoute.Infrastructure.Services.Interfaces;
 
 public interface IGoodsDetachedService
 {

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using OzonRoute.Api.Responses.V1;
 using OzonRoute.Api.Responses.V1.Extensions;
 using OzonRoute.Domain.Models;
@@ -19,6 +20,7 @@ public class V1StorageGoodsController : ControllerBase
 
     [HttpGet]
     [Route("get")]
+    [OutputCache(PolicyName = "storage-goods-get")]
     [ProducesResponseType(typeof(IEnumerable<GetGoodsResponse>), 200)]
     public async Task<IActionResult> GetGoods(CancellationToken cancellationToken)
     {
@@ -30,6 +32,7 @@ public class V1StorageGoodsController : ControllerBase
 
     [HttpGet]
     [Route("price")]
+    [OutputCache(PolicyName = "storage-goods-price")]
     [ProducesResponseType(typeof(CalculateResponse), 200)]
     public async Task<IActionResult> CalculateFullPrice(
         [FromServices] IPriceCalculatorService priceCalculatorService,

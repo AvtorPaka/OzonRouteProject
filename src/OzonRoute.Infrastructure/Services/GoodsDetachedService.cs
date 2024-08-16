@@ -2,9 +2,9 @@ using System.Security.Cryptography;
 using OzonRoute.Domain.Models;
 using OzonRoute.Domain.Models.Extensions;
 using OzonRoute.Domain.Shared.Data.Entities;
-using OzonRoute.Infrastructure.External.Services.Interfaces;
+using OzonRoute.Infrastructure.Services.Interfaces;
 
-namespace OzonRoute.Infrastructure.External.Services;
+namespace OzonRoute.Infrastructure.Services;
 
 internal sealed class GoodsDetachedService : IGoodsDetachedService
 {

@@ -1,12 +1,12 @@
 using OzonRoute.Domain.Shared.Data.Interfaces;
 using OzonRoute.Infrastructure.Dal.Repositories;
 using Microsoft.Extensions.DependencyInjection;
-using OzonRoute.Infrastructure.External.Services;
-using OzonRoute.Infrastructure.External.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using OzonRoute.Infrastructure.Dal.Configuration;
 using OzonRoute.Infrastructure.Dal.Infrastructure;
 using Serilog;
+using OzonRoute.Infrastructure.Services;
+using OzonRoute.Infrastructure.Services.Interfaces;
 
 namespace OzonRoute.Infrastructure.Extensions;
 
@@ -14,8 +14,6 @@ public static class ServiceCollectionExtensions
 {   
     public static IServiceCollection AddDalInfrastucture(this IServiceCollection services, IConfiguration configuration)
     {   
-        services.AddSerilog();
-
         var postgreSqlSection = configuration.GetSection($"DalOptions:{nameof(PostgreSQLOptions)}");
         var redisCacheSection = configuration.GetSection($"DalOptions:{nameof(RedisCacheOptions)}");
 
@@ -34,6 +32,7 @@ public static class ServiceCollectionExtensions
         
         return services;
     }
+
     public static IServiceCollection AddDalRepositories(this IServiceCollection services)
     {
         services.AddScoped<ICalculationsRepository , CalculationsRepository>();
@@ -44,9 +43,23 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    {   
+        var redisCacheSection = configuration.GetSection($"DalOptions:{nameof(RedisCacheOptions)}");
+        var redisOptions = redisCacheSection.Get<RedisCacheOptions>() ?? throw new ArgumentNullException("RedisCacheOptions is missing");
+
+        services.AddSerilog();
+
+        Redis.AddOutputCache(services, redisOptions);
+
+        return services;
+    }
+
+
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
         services.AddScoped<IGoodsDetachedService, GoodsDetachedService>();
+        services.AddScoped<IOutputCacheEvictService, OutputCacheEvictService>();
 
         return services;
     }

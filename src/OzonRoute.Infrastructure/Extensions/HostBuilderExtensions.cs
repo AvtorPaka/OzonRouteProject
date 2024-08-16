@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using OzonRoute.Infrastructure.Dal.Configuration;
-using OzonRoute.Infrastructure.Dal.Infrastructure;
+using OzonRoute.Infrastructure.Configuration;
 using Serilog;
 using Serilog.Exceptions;
 

@@ -23,6 +23,7 @@ public sealed class Startup
     {   
         services
             .AddDomain(_configuration)
+            .AddInfrastructure(_configuration)
             .AddDalInfrastucture(_configuration)
             .AddInfrastructureServices()
             .AddDalRepositories()
@@ -54,6 +55,7 @@ public sealed class Startup
         app.UseSwaggerUI();
 
         app.UseRouting();
+        app.UseOutputCache();
         
         // Buffering for logging requests data
         app.Use(async (context, next) =>
