@@ -61,6 +61,7 @@ services:
       - elasticsearch
     image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
     container_name: kibana
+    restart: always
     env_file:
       - .env
     environment:
